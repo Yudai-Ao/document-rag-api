@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.bedrock import generate_answer
+from app.services.decument_store import get_chunks
+from app.services.rag import generate_rag_answer
 
 
 router = APIRouter()
@@ -8,8 +10,18 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
-    answer = generate_answer(request.question)
 
-    return ChatResponse(
-        answer=answer
+    chunks = get_chunks(request.document_id)
+
+    if not chunks:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    answer = generate_rag_answer(
+        question=request.question,
+        chunks=chunks
     )
+
+    return ChatResponse(answer=answer)
