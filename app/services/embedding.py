@@ -1,6 +1,7 @@
 import json
-
 import boto3
+
+from app.config import settings
 
 
 MODEL_ID = "amazon.titan-embed-text-v2:0"
@@ -8,7 +9,7 @@ MODEL_ID = "amazon.titan-embed-text-v2:0"
 def generate_embedding(text: str) -> list[float]:
     client = boto3.client(
         "bedrock-runtime",
-        region_name="ap-northeast-1"
+        region_name=settings.aws_region
     )
 
     body = json.dumps(
@@ -18,7 +19,7 @@ def generate_embedding(text: str) -> list[float]:
     )
 
     response = client.invoke_model(
-        modelId=MODEL_ID,
+        modelId=settings.embedding_model_id,
         body=body
     )
 

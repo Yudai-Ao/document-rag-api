@@ -1,5 +1,6 @@
 from pypdf import PdfReader
 
+from app.config import settings
 
 
 def extract_text(file_path: str) -> str:
@@ -39,8 +40,8 @@ def split_text(
 def create_chunks(
     text: str,
     source: str,
-    chunk_size: int = 500,
-    chunk_overlap: int = 100
+    chunk_size: int = settings.chunk_size,
+    chunk_overlap: int = settings.chunk_overlap
 ) -> list[dict]:
     raw_chunks = split_text(
         text,

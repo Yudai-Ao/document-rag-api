@@ -1,5 +1,6 @@
 from app.services.bedrock import generate_answer
 from app.services.vector_search import search_similar_chunks
+from app.config import settings
 
 
 def build_prompt(question: str, contexts: list[dict]) -> str:
@@ -27,8 +28,8 @@ def build_prompt(question: str, contexts: list[dict]) -> str:
 def generate_rag_answer(
     question: str,
     chunks: list[dict],
-    top_k: int = 3
-) -> str:
+    top_k: int = settings.top_k
+) -> dict:
     contexts = search_similar_chunks(
         question=question,
         chunks=chunks,

@@ -1,14 +1,14 @@
 import boto3
 
-MODEL_ID = "jp.anthropic.claude-sonnet-4-6"
+from app.config import settings
 
 def generate_answer(question: str) -> str:
     client = boto3.client(
         "bedrock-runtime",
-        region_name="ap-northeast-1")
+        region_name=settings.aws_region)
 
     response = client.converse(
-        modelId=MODEL_ID,
+        modelId=settings.bedrock_model_id,
         messages=[
             {
                 "role": "user",
