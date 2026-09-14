@@ -42,4 +42,7 @@ def generate_rag_answer(
 
     answer = generate_answer(prompt)
 
-    return answer
+    return {
+        "answer": answer,
+        "contexts": contexts
+    }

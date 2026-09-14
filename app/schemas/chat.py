@@ -6,6 +6,12 @@ class ChatRequest(BaseModel):
     document_id: str
 
 
+class SourceInfo(BaseModel):
+    source: str
+    chunk_id: int
+    score: float
+
+
 class ChatResponse(BaseModel):
     answer: str
-
+    sources: list[SourceInfo]

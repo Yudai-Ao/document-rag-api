@@ -19,9 +19,21 @@ def chat(request: ChatRequest):
             detail="Document not found"
         )
 
-    answer = generate_rag_answer(
+    result = generate_rag_answer(
         question=request.question,
         chunks=chunks
     )
 
-    return ChatResponse(answer=answer)
+    sources = [
+        {
+            "source": context["source"],
+            "chunk_id": context["chunk_id"],
+            "score": context["score"]
+        }
+        for context in result["contexts"]
+    ]
+
+    return ChatResponse(
+        answer=result["answer"],
+        sources=sources
+    )
