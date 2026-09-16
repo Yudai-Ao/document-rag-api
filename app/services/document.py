@@ -1,20 +1,28 @@
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from app.config import settings
+from app.exceptions import PDFProcessingError
 
 
 def extract_text(file_path: str) -> str:
-    reader = PdfReader(file_path)
+    try:
+        reader = PdfReader(file_path)
 
-    texts = []
+        texts = []
 
-    for page in reader.pages:
-        text = page.extract_text()
+        for page in reader.pages:
+            text = page.extract_text()
 
-        if text:
-            texts.append(text)
+            if text:
+                texts.append(text)
 
-    return "\n".join(texts)
+        return "\n".join(texts)
+
+    except PdfReadError as e:
+        raise PDFProcessingError(
+            "Failed to process PDF."
+        ) from e
 
 
 def split_text(

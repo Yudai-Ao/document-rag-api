@@ -15,7 +15,10 @@ from app.services.decument_store import (
     save_chunks,
     get_documents,
     delete_document
-
+)
+from app.exceptions import (
+    EmbeddingServiceError,
+    PDFProcessingError
 )
 
 
@@ -60,7 +63,13 @@ async def upload_document(
             source=file.filename
         )    
 
-        chunks = add_embeddings(chunks)
+        try:
+            chunks = add_embeddings(chunks)
+        except EmbeddingServiceError:
+            raise HTTPException(
+                status_code=503,
+                detail="Embedding service is temporarily unavailable."
+            )
 
         document_id = str(uuid.uuid4())
 
@@ -73,6 +82,12 @@ async def upload_document(
             document_id=document_id,
             filename=file.filename,
             chunk_count=len(chunks)
+        )
+
+    except PDFProcessingError:
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to proces PDF."
         )
 
     finally:
