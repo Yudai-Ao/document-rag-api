@@ -1,24 +1,34 @@
 import boto3
 
-MODEL_ID = "jp.anthropic.claude-sonnet-4-6"
+from botocore.exceptions import BotoCoreError, ClientError
+
+from app.config import settings
+from app.exceptions import BedrockServiceError
+
 
 def generate_answer(question: str) -> str:
-    client = boto3.client(
-        "bedrock-runtime",
-        region_name="ap-northeast-1")
+    try:
+        client = boto3.client(
+            "bedrock-runtime",
+            region_name=settings.aws_region)
 
-    response = client.converse(
-        modelId=MODEL_ID,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "text": question
-                     }
-                ]
-            }
-        ]
-    )
+        response = client.converse(
+            modelId=settings.bedrock_model_id,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "text": question
+                        }
+                    ]
+                }
+            ]
+        )
 
-    return response["output"]["message"]["content"][0]["text"]
+        return response["output"]["message"]["content"][0]["text"]
+
+    except (ClientError, BotoCoreError) as e:
+        raise BedrockServiceError(
+            "Failed to generate an answer with Bedrock."
+        ) from e

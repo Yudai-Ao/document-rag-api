@@ -250,6 +250,7 @@ dependencies = [
     { name = "boto3" },
     { name = "cryptography" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "pydantic-settings" },
     { name = "pypdf" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -259,6 +260,7 @@ requires-dist = [
     { name = "boto3", specifier = ">=1.43.89" },
     { name = "cryptography", specifier = ">=50.0.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.141.1" },
+    { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "pypdf", specifier = ">=6.18.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.52.4" },
 ]

@@ -1,19 +1,28 @@
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
+from app.config import settings
+from app.exceptions import PDFProcessingError
 
 
 def extract_text(file_path: str) -> str:
-    reader = PdfReader(file_path)
+    try:
+        reader = PdfReader(file_path)
 
-    texts = []
+        texts = []
 
-    for page in reader.pages:
-        text = page.extract_text()
+        for page in reader.pages:
+            text = page.extract_text()
 
-        if text:
-            texts.append(text)
+            if text:
+                texts.append(text)
 
-    return "\n".join(texts)
+        return "\n".join(texts)
+
+    except PdfReadError as e:
+        raise PDFProcessingError(
+            "Failed to process PDF."
+        ) from e
 
 
 def split_text(
@@ -39,8 +48,8 @@ def split_text(
 def create_chunks(
     text: str,
     source: str,
-    chunk_size: int = 500,
-    chunk_overlap: int = 100
+    chunk_size: int = settings.chunk_size,
+    chunk_overlap: int = settings.chunk_overlap
 ) -> list[dict]:
     raw_chunks = split_text(
         text,
