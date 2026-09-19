@@ -11,13 +11,12 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
-
     chunks = get_chunks(request.document_id)
 
     if not chunks:
         raise HTTPException(
             status_code=404,
-            detail="Document not found"
+            detail="Document not found."
         )
 
     try:
@@ -29,7 +28,7 @@ def chat(request: ChatRequest):
     except (BedrockServiceError, EmbeddingServiceError):
         raise HTTPException(
             status_code=503,
-            detail="AI service is temporary unavaiiable."
+            detail="AI service is temporarily unavailable."
         )
 
     sources = [

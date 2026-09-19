@@ -36,7 +36,7 @@ async def upload_document(
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=400,
-            detail="only PDF files are supported."
+            detail="Only PDF files are supported."
         )
     
     contents = await file.read()
@@ -113,10 +113,10 @@ def remove_document(document_id: str):
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail="Document not found"
+            detail="Document not found."
         )
 
     return DocumentDeleteResponse(
         message="Document deleted.",
-        documenet_id=document_id
+        document_id=document_id
     )

@@ -15,4 +15,4 @@ class DocumentInfo(BaseModel):
 
 class DocumentDeleteResponse(BaseModel):
     message: str
-    documenet_id: str
+    document_id: str
