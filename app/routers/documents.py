@@ -10,6 +10,7 @@ from app.schemas.document import (
     DocumentDeleteResponse
 )
 from app.services.document import extract_text, create_chunks
+from app.services.s3 import upload_file
 from app.services.embedding import add_embeddings
 from app.services.decument_store import (
     save_chunks,
@@ -38,7 +39,7 @@ async def upload_document(
             status_code=400,
             detail="Only PDF files are supported."
         )
-    
+
     contents = await file.read()
 
     with tempfile.NamedTemporaryFile(
@@ -48,8 +49,9 @@ async def upload_document(
         temp_file.write(contents)
         temp_path = temp_file.name
 
-    try:
+    document_id = str(uuid.uuid4())
 
+    try:
         text = extract_text(temp_path)
 
         if not text.strip():
@@ -61,7 +63,7 @@ async def upload_document(
         chunks = create_chunks(
             text=text,
             source=file.filename
-        )    
+        )
 
         try:
             chunks = add_embeddings(chunks)
@@ -71,12 +73,18 @@ async def upload_document(
                 detail="Embedding service is temporarily unavailable."
             )
 
-        document_id = str(uuid.uuid4())
+        object_key = f"documents/{document_id}/original.pdf"
+
+        upload_file(
+            file_path=temp_path,
+            object_key=object_key
+        )
 
         save_chunks(
             document_id=document_id,
             filename=file.filename,
-            chunks=chunks)
+            chunks=chunks
+        )
 
         return DocumentUploadResponse(
             document_id=document_id,
@@ -87,7 +95,7 @@ async def upload_document(
     except PDFProcessingError:
         raise HTTPException(
             status_code=400,
-            detail="Failed to proces PDF."
+            detail="Failed to process PDF."
         )
 
     finally:
