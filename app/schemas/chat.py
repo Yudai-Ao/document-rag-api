@@ -9,7 +9,7 @@ class ChatRequest(BaseModel):
 class SourceInfo(BaseModel):
     source: str
     chunk_id: int
-    score: float
+    distance: float
 
 
 class ChatResponse(BaseModel):

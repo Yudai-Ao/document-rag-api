@@ -20,7 +20,8 @@ from app.services.decument_store import (
 )
 from app.exceptions import (
     EmbeddingServiceError,
-    PDFProcessingError
+    PDFProcessingError,
+    VectorStoreServiceError
 )
 
 
@@ -81,10 +82,16 @@ async def upload_document(
             object_key=object_key
         )
 
-        save_chunks_to_vector_store(
-            document_id=document_id,
-            chunks=chunks
-        )
+        try:
+            save_chunks_to_vector_store(
+                document_id=document_id,
+                chunks=chunks
+            )
+        except VectorStoreServiceError:
+            raise HTTPException(
+                status_code=503,
+                detail="Vector store is temporarily unavailable."
+            )
 
         save_chunks(
             document_id=document_id,

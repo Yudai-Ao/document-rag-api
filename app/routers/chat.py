@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.decument_store import get_chunks
 from app.services.rag import generate_rag_answer
-from app.exceptions import BedrockServiceError, EmbeddingServiceError
+from app.exceptions import (
+    BedrockServiceError, 
+    EmbeddingServiceError,
+    VectorStoreServiceError)
 
 
 router = APIRouter()
@@ -11,31 +13,30 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
-    chunks = get_chunks(request.document_id)
-
-    if not chunks:
-        raise HTTPException(
-            status_code=404,
-            detail="Document not found."
-        )
 
     try:
         result = generate_rag_answer(
             question=request.question,
-            chunks=chunks
+            document_id=request.document_id
         )
 
-    except (BedrockServiceError, EmbeddingServiceError):
+    except (BedrockServiceError, EmbeddingServiceError, VectorStoreServiceError):
         raise HTTPException(
             status_code=503,
             detail="AI service is temporarily unavailable."
+        )
+
+    if not result["contexts"]:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found."
         )
 
     sources = [
         {
             "source": context["source"],
             "chunk_id": context["chunk_id"],
-            "score": context["score"]
+            "distance": context["distance"]
         }
         for context in result["contexts"]
     ]
