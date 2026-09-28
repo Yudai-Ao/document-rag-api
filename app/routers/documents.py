@@ -10,6 +10,7 @@ from app.schemas.document import (
     DocumentDeleteResponse
 )
 from app.services.document import extract_text, create_chunks
+from app.services.vector_store import save_chunks_to_vector_store
 from app.services.s3 import upload_file
 from app.services.embedding import add_embeddings
 from app.services.decument_store import (
@@ -78,6 +79,11 @@ async def upload_document(
         upload_file(
             file_path=temp_path,
             object_key=object_key
+        )
+
+        save_chunks_to_vector_store(
+            document_id=document_id,
+            chunks=chunks
         )
 
         save_chunks(
