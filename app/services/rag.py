@@ -1,5 +1,5 @@
 from app.services.bedrock import generate_answer
-from app.services.vector_search import search_similar_chunks
+from app.services.vector_store import search_vectors
 from app.config import settings
 
 
@@ -27,14 +27,21 @@ def build_prompt(question: str, contexts: list[dict]) -> str:
 
 def generate_rag_answer(
     question: str,
-    chunks: list[dict],
+    document_id: str,
     top_k: int = settings.top_k
 ) -> dict:
-    contexts = search_similar_chunks(
+    contexts = search_vectors(
         question=question,
-        chunks=chunks,
+        document_id=document_id,
         top_k=top_k
     )
+
+    # 検索結果がなければClaudeを呼ばない
+    if not contexts:
+        return {
+            "answer": "",
+            "contexts": []
+        }
 
     prompt = build_prompt(
         question=question,
