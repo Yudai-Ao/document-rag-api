@@ -11,6 +11,7 @@ from app.schemas.document import (
 )
 from app.services.document import extract_text, create_chunks
 from app.services.vector_store import save_chunks_to_vector_store
+from app.services.textract import extract_text_with_textract
 from app.services.s3 import upload_file
 from app.services.embedding import add_embeddings
 from app.services.decument_store import (
@@ -21,8 +22,10 @@ from app.services.decument_store import (
 from app.exceptions import (
     EmbeddingServiceError,
     PDFProcessingError,
-    VectorStoreServiceError
+    VectorStoreServiceError,
+    TextractServiceError
 )
+from app.config import settings
 
 
 router = APIRouter()
@@ -54,7 +57,26 @@ async def upload_document(
     document_id = str(uuid.uuid4())
 
     try:
+        object_key = f"documents/{document_id}/original.pdf"
+
+        upload_file(
+            file_path=temp_path,
+            object_key=object_key
+        )
         text = extract_text(temp_path)
+
+        # pypdfで文字を取得できなかった場合のみTextractを使用
+        if not text.strip():
+            try:
+                text = extract_text_with_textract(
+                    bucket_name=settings.s3_bucket_name,
+                    object_key=object_key
+                )
+            except TextractServiceError:
+                raise HTTPException(
+                    status_code=503,
+                    detail="OCR service is temporarily unavailable."
+                )
 
         if not text.strip():
             raise HTTPException(
@@ -74,13 +96,6 @@ async def upload_document(
                 status_code=503,
                 detail="Embedding service is temporarily unavailable."
             )
-
-        object_key = f"documents/{document_id}/original.pdf"
-
-        upload_file(
-            file_path=temp_path,
-            object_key=object_key
-        )
 
         try:
             save_chunks_to_vector_store(
