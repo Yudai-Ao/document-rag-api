@@ -2,13 +2,15 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.exceptions import EmbeddingServiceError
-from app.services.decument_store import save_chunks, get_chunks
-
+from app.services.document_store import save_chunks
 
 client = TestClient(app)
 
 
 def test_upload_document(monkeypatch):
+    def fake_upload_file(file_path, object_key):
+        return None
+
     def fake_extract_text(file_path):
         return "これはテスト用の文書です"
 
@@ -18,6 +20,14 @@ def test_upload_document(monkeypatch):
 
         return chunks
 
+    def fake_save_chunks_to_vector_store(document_id, chunks):
+        return None
+
+    monkeypatch.setattr(
+        "app.routers.documents.upload_file",
+        fake_upload_file
+    )
+
     monkeypatch.setattr(
         "app.routers.documents.extract_text",
         fake_extract_text
@@ -26,6 +36,11 @@ def test_upload_document(monkeypatch):
     monkeypatch.setattr(
         "app.routers.documents.add_embeddings",
         fake_add_embeddings
+    )
+
+    monkeypatch.setattr(
+        "app.routers.documents.save_chunks_to_vector_store",
+        fake_save_chunks_to_vector_store
     )
 
     response = client.post(
@@ -43,7 +58,7 @@ def test_upload_document(monkeypatch):
 
     data = response.json()
 
-    assert data["filename"] == 'test.pdf'
+    assert data["filename"] == "test.pdf"
     assert data["chunk_count"] == 1
     assert "document_id" in data
 
@@ -67,12 +82,28 @@ def test_uploa_non_pdf():
 
 
 def test_upload_pdf_with_no_text(monkeypatch):
+    def fake_upload_file(file_path, object_key):
+        return None
+
     def fake_extract_text(file_path):
         return ""
+
+    def fake_extract_text_with_textract(bucket_name, object_key):
+        return ""
+
+    monkeypatch.setattr(
+        "app.routers.documents.upload_file",
+        fake_upload_file
+    )
 
     monkeypatch.setattr(
         "app.routers.documents.extract_text",
         fake_extract_text
+    )
+
+    monkeypatch.setattr(
+        "app.routers.documents.extract_text_with_textract",
+        fake_extract_text_with_textract
     )
 
     response = client.post(
@@ -137,7 +168,7 @@ def test_list_documents():
                 "text": "テスト文書",
                 "source": "test.pdf",
                 "chunk_id": 0,
-                "embeddin": [0.1, 0.2, 0.3]
+                "embedding": [0.1, 0.2, 0.3]
             }
         ]
     )

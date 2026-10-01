@@ -14,7 +14,7 @@ from app.services.vector_store import save_chunks_to_vector_store
 from app.services.textract import extract_text_with_textract
 from app.services.s3 import upload_file
 from app.services.embedding import add_embeddings
-from app.services.decument_store import (
+from app.services.document_store import (
     save_chunks,
     get_documents,
     delete_document

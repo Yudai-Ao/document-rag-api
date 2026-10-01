@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.services.decument_store import save_chunks
 from app.exceptions import BedrockServiceError
 
 
@@ -9,20 +8,8 @@ client = TestClient(app)
 
 
 def test_chat(monkeypatch):
-    save_chunks(
-        document_id="test-chat-id",
-        filename="chat-test.pdf",
-        chunks=[
-            {
-                "text": "東京は日本の首都です。",
-                "source": "chat-test.pdf",
-                "chunk_id": 0,
-                "embedding": [0.1, 0.2, 0.3]
-            }
-        ]
-    )
 
-    def fake_generate_rag_answer(question, chunks):
+    def fake_generate_rag_answer(question, document_id):
         return {
             "answer": "東京です。",
             "contexts": [
@@ -30,8 +17,7 @@ def test_chat(monkeypatch):
                     "text": "東京は日本の首都です。",
                     "source": "chat-test.pdf",
                     "chunk_id": 0,
-                    "embedding": [0.1, 0.2, 0.3],
-                    "score": 0.95
+                    "distance": 0.25
                 }
             ]
         }
@@ -56,13 +42,25 @@ def test_chat(monkeypatch):
             {
                 "source": "chat-test.pdf",
                 "chunk_id": 0,
-                "score": 0.95
+                "distance": 0.25
             }
         ]
     }
 
 
-def test_chat_document_not_found():
+def test_chat_document_not_found(monkeypatch):
+
+    def fake_generate_rag_answer(question, document_id):
+        return {
+            "answer": "",
+            "contexts": []
+        }
+
+    monkeypatch.setattr(
+        "app.routers.chat.generate_rag_answer",
+        fake_generate_rag_answer
+    )
+
     response = client.post(
         "/chat",
         json={
@@ -78,20 +76,8 @@ def test_chat_document_not_found():
 
 
 def test_chat_ai_service_error(monkeypatch):
-    save_chunks(
-        document_id="test-error-id",
-        filename="error-test.pdf",
-            chunks=[
-                {
-                    "text": "テスト用文書です。",
-                    "source": "error-test.pdf",
-                    "chunk_id": 0,
-                    "embedding": [0.1, 0.2, 0.3]
-                }
-            ]
-    )
 
-    def fake_generate_rag_answer(question, chunks):
+    def fake_generate_rag_answer(question, document_id):
         raise BedrockServiceError(
             "Failed to generate an answer with Bedrock"
         )
