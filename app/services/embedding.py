@@ -6,8 +6,6 @@ from app.config import settings
 from app.exceptions import EmbeddingServiceError
 
 
-MODEL_ID = "amazon.titan-embed-text-v2:0"
-
 def generate_embedding(text: str) -> list[float]:
     try:
         client = boto3.client(
