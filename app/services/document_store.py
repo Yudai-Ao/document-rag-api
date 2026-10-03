@@ -11,15 +11,6 @@ def save_chunks(
         "chunks": chunks
     }
 
-def get_chunks(
-    document_id: str
-) -> list[dict]:
-    document = document_store.get(document_id)
-
-    if document is None:
-        return []
-
-    return document["chunks"]
 
 def get_documents() -> list[dict]:
     return [
