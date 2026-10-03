@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.common import ErrorResponse
 from app.services.rag import generate_rag_answer
 from app.exceptions import (
     BedrockServiceError, 
@@ -11,13 +12,26 @@ from app.exceptions import (
 router = APIRouter()
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post(
+    "/chat", 
+    response_model=ChatResponse,
+    responses={
+        404: {
+            "model": ErrorResponse,
+            "description": "Document not found."
+        },
+        503: {
+            "model": ErrorResponse,
+            "description": "AI service is temporarily unavailable."
+        }
+    }
+)
 def chat(request: ChatRequest):
 
     try:
         result = generate_rag_answer(
             question=request.question,
-            document_id=request.document_id
+            document_id=str(request.document_id)
         )
 
     except (BedrockServiceError, EmbeddingServiceError, VectorStoreServiceError):

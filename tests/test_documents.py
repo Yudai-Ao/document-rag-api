@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.exceptions import EmbeddingServiceError
+from app.exceptions import EmbeddingServiceError, S3ServiceError
 
 client = TestClient(app)
 
@@ -263,3 +263,62 @@ def test_list_documents(monkeypatch):
             "chunk_count": 1
         }
     ]
+
+
+def test_list_documents_s3_error(monkeypatch):
+    def fake_get_document_metadata_list():
+        raise S3ServiceError(
+            "Failed to get document metadata from S3"
+        )
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata_list",
+        fake_get_document_metadata_list
+    )
+
+    response = client.get("/documents")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Storage service is temporarily unavailable."
+    }
+
+
+def test_upload_empty_pdf():
+
+    response = client.post(
+        "/documents",
+        files={
+            "file": (
+                "empty.pdf",
+                b"",
+                "application/pdf"
+            )
+        }
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": "PDF file is empty."
+    }
+
+
+def test_upload_pdf_too_large():
+
+    large_content = b"a" * (10 * 1024 * 1024 + 1)
+
+    response = client.post(
+        "/documents",
+        files={
+            "file": (
+                "large.pdf",
+                large_content,
+                "application/pdf"
+            )
+        }
+    )
+
+    assert response.status_code == 413
+    assert response.json() == {
+        "detail": "PDF file must be 10 MB or smaller."
+    }

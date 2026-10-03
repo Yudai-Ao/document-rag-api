@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
     top_k: int = 3
 
+    max_pdf_size_mb: int = 10
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

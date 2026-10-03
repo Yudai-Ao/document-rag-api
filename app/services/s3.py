@@ -4,6 +4,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from app.config import settings
+from app.exceptions import S3ServiceError
 
 
 s3_client = boto3.client(
@@ -21,7 +22,7 @@ def upload_file(file_path: str, object_key: str) -> None:
             object_key
         )
     except (ClientError, BotoCoreError) as e:
-        raise RuntimeError("Failed to upload file to S3") from e
+        raise S3ServiceError("Failed to upload file to S3") from e
 
 
 def save_document_metadata(
@@ -47,13 +48,13 @@ def save_document_metadata(
             ContentType="application/json"
         )
     except (ClientError, BotoCoreError) as e:
-        raise RuntimeError(
+        raise S3ServiceError(
             "Failed to save document metadata to S3"
         ) from e
 
 
 def get_document_metadata_list() -> list[dict]:
-    """S3に保存されている文書メタデータのいいtrainんを取得する。"""
+    """S3に保存されている文書メタデータの一覧を取得する。"""
     try:
         response = s3_client.list_objects_v2(
             Bucket=settings.s3_bucket_name,
@@ -82,7 +83,7 @@ def get_document_metadata_list() -> list[dict]:
         return documents
 
     except (ClientError, BotoCoreError) as e:
-        raise RuntimeError(
+        raise S3ServiceError(
             "Failed to get document metadata from S3"
         ) from e
 
@@ -108,12 +109,12 @@ def get_document_metadata(document_id: str) -> dict | None:
         if error_code in ("NoSuchKey", "404"):
             return None
 
-        raise RuntimeError(
+        raise S3ServiceError(
             "Failed to get document metadata from S3"
         ) from e
 
     except BotoCoreError as e:
-        raise RuntimeError(
+        raise S3ServiceError(
             "Failed to get document metadata from S3"
         ) from e
 
@@ -137,6 +138,6 @@ def delete_document_files(document_id: str) -> None:
         )
 
     except (ClientError, BotoCoreError) as e:
-        raise RuntimeError(
+        raise S3ServiceError(
             "Failed to delete document files from S3"
         ) from e

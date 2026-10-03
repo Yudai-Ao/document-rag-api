@@ -9,6 +9,7 @@ from app.schemas.document import (
     DocumentInfo,
     DocumentDeleteResponse
 )
+from app.schemas.common import ErrorResponse
 from app.services.document import extract_text, create_chunks
 from app.services.vector_store import (
     save_chunks_to_vector_store,
@@ -27,7 +28,8 @@ from app.exceptions import (
     EmbeddingServiceError,
     PDFProcessingError,
     VectorStoreServiceError,
-    TextractServiceError
+    TextractServiceError,
+    S3ServiceError
 )
 from app.config import settings
 
@@ -37,7 +39,21 @@ router = APIRouter()
 
 @router.post(
     "/documents",
-    response_model=DocumentUploadResponse
+    response_model=DocumentUploadResponse,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid PDF or failed PDF processing."
+        },
+        413: {
+            "model": ErrorResponse,
+            "description": "PDF file is too learge."
+        },
+        503: {
+            "model": ErrorResponse,
+            "description": "Document processing service is temporarily unavailable."
+        }
+    }
 )
 async def upload_document(
     file: UploadFile = File(...)
@@ -50,6 +66,20 @@ async def upload_document(
         )
 
     contents = await file.read()
+
+    if not contents:
+        raise HTTPException(
+            status_code=400,
+            detail="PDF file is empty."
+        )
+
+    max_size_bytes = settings.max_pdf_size_mb * 1024 * 1024
+
+    if len(contents) > max_size_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"PDF file must be {settings.max_pdf_size_mb} MB or smaller."
+        )
 
     with tempfile.NamedTemporaryFile(
         delete=False,
@@ -130,43 +160,79 @@ async def upload_document(
             detail="Failed to process PDF."
         )
 
+    except S3ServiceError:
+        raise HTTPException(
+            status_code=503,
+            detail="Storage service is temporarily unavailable."
+        )
+
     finally:
         os.remove(temp_path)
 
 
 @router.get(
     "/documents",
-    response_model=list[DocumentInfo]
+    response_model=list[DocumentInfo],
+    responses={
+        503: {
+            "model": ErrorResponse,
+            "description": "Storage service is temporarily unavailable."
+        }
+    }
 )
 def list_documents():
-    return get_document_metadata_list()
+    try:
+        return get_document_metadata_list()
+    except S3ServiceError:
+        raise HTTPException(
+            status_code=503, 
+            detail="Storage service is temporarily unavailable."
+        )
 
 
 @router.delete(
     "/documents/{document_id}",
-    response_model=DocumentDeleteResponse
+    response_model=DocumentDeleteResponse,
+    responses={
+        404: {
+            "model": ErrorResponse,
+            "description": "Document not found."
+        },
+        503: {
+            "model": ErrorResponse,
+            "description": "Storage service is temporarily unavailable."
+        }
+    }
 )
 def remove_document(document_id: str):
 
-    # S3からメタデータを取得
-    metadata = get_document_metadata(document_id)
+    try:
 
-    if metadata is None:
+        # S3からメタデータを取得
+        metadata = get_document_metadata(document_id)
+
+        if metadata is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Document not found."
+            )
+
+        # S3 Vectorsからベクトルを削除
+        delete_document_vectors(
+            document_id=document_id,
+            chunk_count=metadata["chunk_count"]
+            )
+
+        # S3からPDFとmetadataを削除
+        delete_document_files(document_id)
+
+        return DocumentDeleteResponse(
+            message="Document deleted.",
+            document_id=document_id
+        )
+
+    except (S3ServiceError, VectorStoreServiceError):
         raise HTTPException(
-            status_code=404,
-            detail="Document not found."
+            status_code=503,
+            detail="Storage service is temporarily unavailable."
         )
-
-    # S3 Vectorsからベクトルを削除
-    delete_document_vectors(
-        document_id=document_id,
-        chunk_count=metadata["chunk_count"]
-        )
-
-    # S3からPDFとmetadataを削除
-    delete_document_files(document_id)
-
-    return DocumentDeleteResponse(
-        message="Document deleted.",
-        document_id=document_id
-    )
