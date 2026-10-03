@@ -99,3 +99,30 @@ def search_vectors(
         )
 
     return contexts
+
+
+def delete_document_vectors(
+    document_id: str,
+    chunk_count: int
+) -> None:
+    """指定した文書に紐づくベクトルをS3 Vectorsから削除する。"""
+
+    keys = [
+        f"{document_id}-{index}"
+        for index in range(chunk_count)
+    ]
+
+    if not keys:
+        return
+
+    try:
+        s3_vectors_client.delete_vectors(
+            vectorBucketName=settings.s3_vector_bucket_name,
+            indexName=settings.s3_vector_index_name,
+            keys=keys
+        )
+
+    except (ClientError, BotoCoreError) as e:
+        raise VectorStoreServiceError(
+            "Failed to delete vectors from S3 Vectors."
+        ) from e

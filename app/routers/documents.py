@@ -10,15 +10,19 @@ from app.schemas.document import (
     DocumentDeleteResponse
 )
 from app.services.document import extract_text, create_chunks
-from app.services.vector_store import save_chunks_to_vector_store
-from app.services.textract import extract_text_with_textract
-from app.services.s3 import upload_file
-from app.services.embedding import add_embeddings
-from app.services.document_store import (
-    save_chunks,
-    get_documents,
-    delete_document
+from app.services.vector_store import (
+    save_chunks_to_vector_store,
+    delete_document_vectors
 )
+from app.services.textract import extract_text_with_textract
+from app.services.s3 import (
+    upload_file, 
+    save_document_metadata,
+    get_document_metadata_list,
+    get_document_metadata,
+    delete_document_files)
+from app.services.embedding import add_embeddings
+
 from app.exceptions import (
     EmbeddingServiceError,
     PDFProcessingError,
@@ -108,10 +112,10 @@ async def upload_document(
                 detail="Vector store is temporarily unavailable."
             )
 
-        save_chunks(
+        save_document_metadata(
             document_id=document_id,
             filename=file.filename,
-            chunks=chunks
+            chunk_count=len(chunks)
         )
 
         return DocumentUploadResponse(
@@ -135,7 +139,7 @@ async def upload_document(
     response_model=list[DocumentInfo]
 )
 def list_documents():
-    return get_documents()
+    return get_document_metadata_list()
 
 
 @router.delete(
@@ -144,13 +148,23 @@ def list_documents():
 )
 def remove_document(document_id: str):
 
-    deleted = delete_document(document_id)
+    # S3からメタデータを取得
+    metadata = get_document_metadata(document_id)
 
-    if not deleted:
+    if metadata is None:
         raise HTTPException(
             status_code=404,
             detail="Document not found."
         )
+
+    # S3 Vectorsからベクトルを削除
+    delete_document_vectors(
+        document_id=document_id,
+        chunk_count=metadata["chunk_count"]
+        )
+
+    # S3からPDFとmetadataを削除
+    delete_document_files(document_id)
 
     return DocumentDeleteResponse(
         message="Document deleted.",

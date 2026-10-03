@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.exceptions import EmbeddingServiceError
-from app.services.document_store import save_chunks
 
 client = TestClient(app)
 
@@ -21,6 +20,13 @@ def test_upload_document(monkeypatch):
         return chunks
 
     def fake_save_chunks_to_vector_store(document_id, chunks):
+        return None
+
+    def fake_save_document_metadata(
+        document_id,
+        filename,
+        chunk_count
+    ):
         return None
 
     monkeypatch.setattr(
@@ -43,6 +49,11 @@ def test_upload_document(monkeypatch):
         fake_save_chunks_to_vector_store
     )
 
+    monkeypatch.setattr(
+        "app.routers.documents.save_document_metadata",
+        fake_save_document_metadata
+    )
+
     response = client.post(
         "/documents",
         files={
@@ -63,7 +74,7 @@ def test_upload_document(monkeypatch):
     assert "document_id" in data
 
 
-def test_uploa_non_pdf():
+def test_upload_non_pdf():
     response = client.post(
         "/documents",
         files={
@@ -132,15 +143,23 @@ def test_upload_document_embedding_error(monkeypatch):
             "Failed to genrerate embedding with Bedrock."
         )
 
+    def fake_upload_file(file_path, object_key):
+        return None
+
     monkeypatch.setattr(
         "app.routers.documents.extract_text",
         fake_extract_text
     )
 
     monkeypatch.setattr(
-            "app.routers.documents.add_embeddings",
-            fake_add_embeddings
-        )
+        "app.routers.documents.add_embeddings",
+        fake_add_embeddings
+    )
+
+    monkeypatch.setattr(
+        "app.routers.documents.upload_file",
+        fake_upload_file
+    )
 
     response = client.post(
         "/documents",
@@ -159,50 +178,37 @@ def test_upload_document_embedding_error(monkeypatch):
     }
 
 
-def test_list_documents():
-    save_chunks(
-        document_id="test-document-id",
-        filename="test.pdf",
-        chunks=[
-            {
-                "text": "テスト文書",
-                "source": "test.pdf",
-                "chunk_id": 0,
-                "embedding": [0.1, 0.2, 0.3]
-            }
-        ]
+def test_delete_document(monkeypatch):
+    def fake_get_document_metadata(document_id):
+        return {
+            "document_id": document_id,
+            "filename": "delete-test.pdf",
+            "chunk_count": 1
+        }
+
+    def fake_delete_document_vectors(document_id, chunk_count):
+        return None
+
+    def fake_delete_document_files(document_id):
+        return None
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata",
+        fake_get_document_metadata
     )
 
-    response = client.get("/documents")
-
-    assert response.status_code == 200
-
-    data = response.json()
-
-    assert any(
-        document["document_id"] == "test-document-id"
-        and document["filename"] == "test.pdf"
-        and document["chunk_count"] == 1
-        for document in data
+    monkeypatch.setattr(
+        "app.routers.documents.delete_document_vectors",
+        fake_delete_document_vectors
     )
 
-
-def test_delete_document():
-    save_chunks(
-        document_id="test-delete-id",
-        filename="delete-test.pdf",
-        chunks=[
-            {
-                "text": "削除テスト用文書",
-                "source": "delete-test.pdf",
-                "chunk_id": 0,
-                "embedding": [0.1, 0.2, 0.3]
-            }
-        ]
+    monkeypatch.setattr(
+        "app.routers.documents.delete_document_files",
+        fake_delete_document_files
     )
 
     response = client.delete(
-        "/documents/test-delete-id",
+        "/documents/test-delete-id"
     )
 
     assert response.status_code == 200
@@ -212,7 +218,15 @@ def test_delete_document():
     }
 
 
-def test_delete_document_not_found():
+def test_delete_document_not_found(monkeypatch):
+    def fake_get_document_metadata(document_id):
+        return None
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata",
+        fake_get_document_metadata
+    )
+
     response = client.delete(
         "/documents/non-existent-id"
     )
@@ -221,3 +235,31 @@ def test_delete_document_not_found():
     assert response.json() == {
         "detail": "Document not found."
     }
+
+
+def test_list_documents(monkeypatch):
+    def fake_get_document_metadata_list():
+        return [
+            {
+                "document_id": "test-document-id",
+                "filename": "test.pdf",
+                "chunk_count": 1
+            }
+        ]
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata_list",
+        fake_get_document_metadata_list
+    )
+
+    response = client.get("/documents")
+
+    assert response.status_code == 200
+
+    assert response.json() == [
+        {
+            "document_id": "test-document-id",
+            "filename": "test.pdf",
+            "chunk_count": 1
+        }
+    ]
