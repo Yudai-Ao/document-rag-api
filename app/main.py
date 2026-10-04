@@ -1,8 +1,15 @@
+import logging
+
 from fastapi import FastAPI
 from app.routers.chat import router as chat_router
 from app.routers.documents import router as document_router
 from app.schemas.health import HealthResponse
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
 
 app = FastAPI()
 

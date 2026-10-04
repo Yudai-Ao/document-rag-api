@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 import uuid
@@ -34,6 +35,8 @@ from app.exceptions import (
 from app.config import settings
 
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -47,7 +50,7 @@ router = APIRouter()
         },
         413: {
             "model": ErrorResponse,
-            "description": "PDF file is too learge."
+            "description": "PDF file is too lerge."
         },
         503: {
             "model": ErrorResponse,
@@ -107,6 +110,9 @@ async def upload_document(
                     object_key=object_key
                 )
             except TextractServiceError:
+                logger.exception(
+                    "Failed to extract text using Textract."
+                )
                 raise HTTPException(
                     status_code=503,
                     detail="OCR service is temporarily unavailable."
@@ -126,6 +132,9 @@ async def upload_document(
         try:
             chunks = add_embeddings(chunks)
         except EmbeddingServiceError:
+            logger.exception(
+                "Failed to generate embeddings."
+            )
             raise HTTPException(
                 status_code=503,
                 detail="Embedding service is temporarily unavailable."
@@ -137,6 +146,9 @@ async def upload_document(
                 chunks=chunks
             )
         except VectorStoreServiceError:
+            logger.exception(
+                "Failed to save document vectors."
+            )
             raise HTTPException(
                 status_code=503,
                 detail="Vector store is temporarily unavailable."
@@ -155,12 +167,18 @@ async def upload_document(
         )
 
     except PDFProcessingError:
+        logger.exception(
+            "Failed to proecss PDF."
+        )
         raise HTTPException(
             status_code=400,
             detail="Failed to process PDF."
         )
 
     except S3ServiceError:
+        logger.exception(
+            "Failed to access S3 while processing document."
+        )
         raise HTTPException(
             status_code=503,
             detail="Storage service is temporarily unavailable."
@@ -184,6 +202,9 @@ def list_documents():
     try:
         return get_document_metadata_list()
     except S3ServiceError:
+        logger.exception(
+            "Failed to retrieve document list from S3."
+        )
         raise HTTPException(
             status_code=503, 
             detail="Storage service is temporarily unavailable."
@@ -232,6 +253,9 @@ def remove_document(document_id: str):
         )
 
     except (S3ServiceError, VectorStoreServiceError):
+        logger.exception(
+            "Failed to delete document."
+        )
         raise HTTPException(
             status_code=503,
             detail="Storage service is temporarily unavailable."

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.chat import ChatRequest, ChatResponse
@@ -8,6 +10,8 @@ from app.exceptions import (
     EmbeddingServiceError,
     VectorStoreServiceError)
 
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -35,6 +39,9 @@ def chat(request: ChatRequest):
         )
 
     except (BedrockServiceError, EmbeddingServiceError, VectorStoreServiceError):
+        logger.exception(
+            "Failed to generate RAG answer."
+        )
         raise HTTPException(
             status_code=503,
             detail="AI service is temporarily unavailable."

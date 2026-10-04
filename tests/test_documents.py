@@ -1,7 +1,11 @@
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.exceptions import EmbeddingServiceError, S3ServiceError
+from app.exceptions import (
+    EmbeddingServiceError, 
+    S3ServiceError,
+    VectorStoreServiceError
+)
 
 client = TestClient(app)
 
@@ -321,4 +325,60 @@ def test_upload_pdf_too_large():
     assert response.status_code == 413
     assert response.json() == {
         "detail": "PDF file must be 10 MB or smaller."
+    }
+
+
+def test_delete_document_s3_error(monkeypatch):
+
+    def fake_get_document_metadata(document_id):
+        raise S3ServiceError(
+            "Failed to get document metadata from S3"
+        )
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata",
+        fake_get_document_metadata
+    )
+
+    response = client.delete(
+        "/documents/550e8400-e29b-41d4-a716-446655440000"
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Storage service is temporarily unavailable."
+    }
+
+
+def test_delete_document_vector_store_error(monkeypatch):
+
+    def fake_get_document_metadata(document_id):
+        return {
+            "document_id": document_id,
+            "filename": "test.pdf",
+            "chunk_count": 3
+        }
+
+    def fake_delete_document_vectors(document_id, chunk_count):
+        raise VectorStoreServiceError(
+            "Failed to delete vectors from S3 Vectors."
+        )
+
+    monkeypatch.setattr(
+        "app.routers.documents.get_document_metadata",
+        fake_get_document_metadata
+    )
+
+    monkeypatch.setattr(
+        "app.routers.documents.delete_document_vectors",
+        fake_delete_document_vectors
+    )
+
+    response = client.delete(
+        "/documents/550e8400-e29b-41d4-a716-446655440000"
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "detail": "Storage service is temporarily unavailable."
     }
