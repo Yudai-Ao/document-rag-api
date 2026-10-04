@@ -1,0 +1,47 @@
+[
+  {
+    "id": "alb-001",
+    "question": "Document RAG APIのALBはインターネットから何番ポートでリクエストを受信しますか？",
+    "category": "direct",
+    "expected_answer": "HTTP 80番ポート",
+    "expected_section": "2. システム基本情報",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answerable": true
+  },
+  {
+    "id": "alb-002",
+    "question": "ALBのTargetがUnhealthyです。Health Checkについて何を確認すればよいですか？",
+    "category": "paraphrase",
+    "expected_answer": "Health Check Pathが /health であること、/health がHTTP 200を返すこと、ECS Taskが8000番ポートで待ち受けていること、ALBからECSへの通信が許可されていることを確認する",
+    "expected_section": "8. Health Checkの確認",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answerable": true
+  },
+  {
+    "id": "alb-003",
+    "question": "ECSの8000番ポートを0.0.0.0/0に公開しても問題ありませんか？",
+    "category": "paraphrase",
+    "expected_answer": "公開してはならない。ECSの8000番ポートへの通信元はALB Security Groupのみに限定する",
+    "expected_section": "7. Security Groupの確認",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answerable": true
+  },
+  {
+    "id": "alb-004",
+    "question": "ECS TaskはRunningで /health も正常ですが、/chat が503を返します。ALBの問題として調査を続けるべきですか？",
+    "category": "multi_step",
+    "expected_answer": "ALB障害ではなく、アプリケーションまたは依存AWSサービスの障害として切り分け、CloudWatch LogsやBedrock、S3、S3 Vectorsのエラーを確認する",
+    "expected_section": "5. 503 Service Unavailableが返される場合",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answerable": true
+  },
+  {
+    "id": "alb-005",
+    "question": "ALBのTLS証明書の有効期限は何日前から更新すべきですか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_source": null,
+    "answerable": false
+  }
+]

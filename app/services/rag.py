@@ -27,7 +27,7 @@ def build_prompt(question: str, contexts: list[dict]) -> str:
 
 def generate_rag_answer(
     question: str,
-    document_id: str,
+    document_id: str | None = None,
     top_k: int = settings.top_k
 ) -> dict:
     contexts = search_vectors(

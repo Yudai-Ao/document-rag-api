@@ -35,7 +35,11 @@ def chat(request: ChatRequest):
     try:
         result = generate_rag_answer(
             question=request.question,
-            document_id=str(request.document_id)
+            document_id=(
+                str(request.document_id)
+                if request.document_id is not None
+                else None
+            )
         )
 
     except (BedrockServiceError, EmbeddingServiceError, VectorStoreServiceError):

@@ -8,7 +8,7 @@ class ChatRequest(BaseModel):
         min_length=1,
         max_length=2000
     )
-    document_id: UUID
+    document_id: UUID | None = None
 
 
 class SourceInfo(BaseModel):
