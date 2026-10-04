@@ -140,3 +140,53 @@ def test_chat_question_too_long():
     )
 
     assert response.status_code == 422
+
+
+def test_chat_without_document_id(monkeypatch):
+
+    received = {}
+
+    def fake_generate_rag_answer(
+        question,
+        document_id=None
+    ):
+        received["document_id"] = document_id
+
+        return {
+            "answer": "ALBのTarget Healthを確認してください。",
+            "contexts": [
+                {
+                    "text": "ALB障害対応手順",
+                    "source": "alb-troubleshooting.pdf",
+                    "chunk_id": 1,
+                    "distance": 0.3
+                }
+            ]
+        }
+
+    monkeypatch.setattr(
+        "app.routers.chat.generate_rag_answer",
+        fake_generate_rag_answer
+    )
+
+    response = client.post(
+        "/chat",
+        json={
+            "question": "ALBで503が発生しています。"
+        }
+    )
+
+    assert response.status_code == 200
+
+    assert received["document_id"] is None
+
+    assert response.json() == {
+        "answer": "ALBのTarget Healthを確認してください。",
+        "sources": [
+            {
+                "source": "alb-troubleshooting.pdf",
+                "chunk_id": 1,
+                "distance": 0.3
+            }
+        ]
+    }

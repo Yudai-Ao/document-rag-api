@@ -56,27 +56,33 @@ def save_chunks_to_vector_store(
 
 def search_vectors(
     question: str,
-    document_id: str,
     top_k: int,
+    document_id: str | None = None,
 ) -> list[dict]:
 
     query_embedding = generate_embedding(question)
 
+    query_params = {
+        "vectorBucketName": settings.s3_vector_bucket_name,
+        "indexName": settings.s3_vector_index_name,
+        "queryVector": {
+            "float32": query_embedding
+        },
+        "topK": top_k,
+        "returnMetadata": True,
+        "returnDistance": True
+    }
+
+    if document_id is not None:
+        query_params["filter"] = {
+            "document_id": {
+                "$eq": document_id
+            }
+        }
+
     try:
         response = s3_vectors_client.query_vectors(
-            vectorBucketName=settings.s3_vector_bucket_name,
-            indexName=settings.s3_vector_index_name,
-            queryVector={
-                "float32": query_embedding
-            },
-            topK=top_k,
-            filter={
-                "document_id": {
-                    "$eq": document_id
-                }
-            },
-            returnMetadata=True,
-            returnDistance=True
+            **query_params
         )
 
     except (ClientError, BotoCoreError) as e:
