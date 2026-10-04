@@ -6,6 +6,8 @@ from app.exceptions import BedrockServiceError
 
 client = TestClient(app)
 
+TEST_DOCUMENT_ID = "550e8400-e29b-41d4-a716-446655440000"
+
 
 def test_chat(monkeypatch):
 
@@ -31,7 +33,7 @@ def test_chat(monkeypatch):
         "/chat",
         json={
             "question": "日本の首都はどこですか？",
-            "document_id": "test-chat-id"
+            "document_id": TEST_DOCUMENT_ID
         }
     )
 
@@ -65,7 +67,7 @@ def test_chat_document_not_found(monkeypatch):
         "/chat",
         json={
             "question": "日本の首都はどこですか？",
-            "document_id": "non-existent-id"
+            "document_id": TEST_DOCUMENT_ID
         }
     )
 
@@ -91,7 +93,7 @@ def test_chat_ai_service_error(monkeypatch):
         "/chat",
         json={
             "question": "この文書について教えてください。",
-            "document_id": "test-error-id"
+            "document_id": TEST_DOCUMENT_ID
         }
     )
 
@@ -99,3 +101,42 @@ def test_chat_ai_service_error(monkeypatch):
     assert response.json() == {
         "detail": "AI service is temporarily unavailable."
     }
+
+
+def test_chat_invalid_document_id():
+
+    response = client.post(
+        "/chat",
+        json={
+            "question": "この文書を要約してください。",
+            "document_id": "invalid-id"
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_chat_empty_question():
+
+    response = client.post(
+        "/chat",
+        json={
+            "question": "",
+            "document_id": TEST_DOCUMENT_ID
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_chat_question_too_long():
+
+    response = client.post(
+        "/chat",
+        json={
+            "question": "a" * 2001,
+            "document_id": TEST_DOCUMENT_ID
+        }
+    )
+
+    assert response.status_code == 422

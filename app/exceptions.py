@@ -18,3 +18,8 @@ class VectorStoreServiceError(Exception):
 class TextractServiceError(Exception):
     """TextractによるOCR処理に失敗した場合の例外"""
     pass
+
+
+class S3ServiceError(Exception):
+    """S3との通信に失敗した場合の例外"""
+    pass
