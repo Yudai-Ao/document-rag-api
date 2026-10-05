@@ -1,0 +1,26 @@
+{
+  "vectorBucketName": "document-rag-api-vectors",
+  "indexName": "document-chunks",
+  "keys": [
+    "6c722345-df58-401e-9d2e-6f2b462e49c1-1",
+    "35d888bc-aaba-4d92-afe0-8c401e619329-0",
+    "0a8b0ec9-aefc-429d-b43e-f044f91d01e6-0",
+    "5850d2ae-ea2b-4672-a5fe-5a0078c2cf3f-1",
+    "6c722345-df58-401e-9d2e-6f2b462e49c1-0",
+    "937d8680-399d-418f-9cf9-cfab971be310-1",
+    "test-vector-1",
+    "5850d2ae-ea2b-4672-a5fe-5a0078c2cf3f-0",
+    "937d8680-399d-418f-9cf9-cfab971be310-0",
+    "0a8b0ec9-aefc-429d-b43e-f044f91d01e6-1",
+    "35d888bc-aaba-4d92-afe0-8c401e619329-1",
+    "284951d6-19c5-40c9-bda7-2dbf5b0569ef-0",
+    "31b908f9-9430-41d3-a1b2-2aa3c892c131-1",
+    "2bbb8010-3207-4138-baff-cdf8969bc669-2",
+    "2bbb8010-3207-4138-baff-cdf8969bc669-1",
+    "a7887eb1-4296-40a5-800b-de4a58a35473-0",
+    "284951d6-19c5-40c9-bda7-2dbf5b0569ef-1",
+    "a7887eb1-4296-40a5-800b-de4a58a35473-1",
+    "31b908f9-9430-41d3-a1b2-2aa3c892c131-0",
+    "2bbb8010-3207-4138-baff-cdf8969bc669-0"
+  ]
+}

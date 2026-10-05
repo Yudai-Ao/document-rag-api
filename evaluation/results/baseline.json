@@ -1,0 +1,494 @@
+[
+  {
+    "id": "ecs-001",
+    "question": "Document RAG APIのApplication Portは何番ですか？",
+    "category": "direct",
+    "answerable": true,
+    "expected_answer": "8000",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "参考文書によると、Document RAG APIの**Application Portは8000番**です。\n\n（出典: alb-troubleshooting.pdf）",
+    "sources": [
+      {
+        "text": "alth Check Path\n/health\n正常時のHealth Check Response\n{\"status\":\"ok\"}\nCloudWatch Log Group\n/ecs/document-rag-api\nApplication Runtime\nAWS Fargate\nContainer Architecture\nLinux / ARM64\n通常時はECS Serviceに1つのRunning Taskが存在し、ALB Target GroupのTarget HealthがHealthyであること。\n3. 障害対応の基本フロー\nDocument RAG APIで障害が発生した場合は、以下の順序で確認する。\n1. ALB Target GroupのTarget Healthを確認する\n2. ECS ServiceのRunning Task数を確認する\n3. ECS Taskの状態およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.6256547570228577
+      },
+      {
+        "text": "Document RAG API - ALB障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIで使用するApplication Load Balancer（ALB）およびTarget\nGroupに関連する障害が発生した場合の初動確認と切り分け手順を定める。\n• ALBから502 Bad Gatewayが返される\n• ALBから503 Service Unavailableが返される\n• Target GroupのTargetがUnhealthyになる\n• Health Checkが失敗する\n• ALBからECS Taskへ通信できない\n2. システム基本情報\nALB Listener Protocol: HTTP\nALB Listener Port: 80\nTarget Group Protocol: HTTP\nTarget Group Port: 8000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALB",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.6398230791091919
+      },
+      {
+        "text": " がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHealth Checkの設定が正しくてもUnhealthyが継続する場合は、CloudWatch LogsでFastAPIの起動状態を確認する。\n7. Security Groupの確認\nALB Security GroupはインターネットからHTTP 80番ポートへの通信を許可する。\nECS Security GroupはApplication Port 8000への通信を許可するが、SourceはALB Security\nGroupのみに限定する。ECS Security Groupで8000番ポートを0.0.0.0/0へ公開してはならない。\n正常な通信経路: Internet → ALB:80 → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\"",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.6432411670684814
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.6256547570228577
+    }
+  },
+  {
+    "id": "ecs-002",
+    "question": "障害調査を開始してから何分以内に原因を特定できなければエスカレーションしますか？",
+    "category": "direct",
+    "answerable": true,
+    "expected_answer": "15分以内",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "参考文書によると、**調査開始から15分以内**に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする必要があります。",
+    "sources": [
+      {
+        "text": "されているResource ARN\n • ECS Task Roleに対象Actionが許可されているか\n • IAM PolicyのResourceが対象リソースを含んでいるか\n 権限不足が確認された場合でも、原因調査担当者が独断でFull Access Policyを付与してはならない。\n必要なActionおよびResourceを特定し、最小権限となるようIAM Policyの変更を申請する。\n8. CloudWatch Logsの確認\nアプリケーションログはCloudWatch Log Group /ecs/document-rag-api に出力される。\n障害調査時は、ユーザーに返却されたHTTPステータスだけで原因を判断せず、対応する時間帯のCloudWatch\nLogsを確認する。\nアプリケーションでは内部例外の詳細をAPIレスポンスへ直接返さず、以下のような汎用メッセージへ変換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタッ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 6,
+        "distance": 0.6739329099655151
+      },
+      {
+        "text": "因を特定できない\n • ECS Taskが繰り返し停止する\n • 複数のAWSサービスで同時にエラーが発生している\n • IAM Policy変更が必要\n • AWSサービス自体の障害が疑われる\n エスカレーション時には、以下の情報を共有する。\n • 障害発生時刻\n • 発生しているHTTPステータス\n \n• ECS Taskの状態\n • ALB Target Health\n • CloudWatch Logsのエラー内容\n • 実施済みの確認事項\n ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 8,
+        "distance": 0.6754709482192993
+      },
+      {
+        "text": "およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認する\n調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする。\n4. ECSタスクが起動しない場合\nECS ServiceのDesired Task Countが1であるにもかかわらずRunning Taskが0の場合、停止済みTaskのStopped\nReasonを確認する。\n\n確認対象は以下とする。\n • Essential container exited\n • ResourceInitializationError\n • CannotPullContainerError\n • OutOfMemoryError\n • コンテナ起動コマンドのエラー\n コンテナが起動直後に停止している場合は、CloudWatch Logsの起動ログも確認する。\nexec format error が記録されている場合は、Docker ImageのCPUアーキテクチャと",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 2,
+        "distance": 0.681575357913971
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.6739329099655151
+    }
+  },
+  {
+    "id": "ecs-003",
+    "question": "Document RAG APIのECS TaskはどのCPUアーキテクチャを使用しますか？",
+    "category": "direct",
+    "answerable": true,
+    "expected_answer": "Linux / ARM64",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "参考文書によると、Document RAG APIのECS Taskは**Linux / ARM64**アーキテクチャを使用します。\n\n（出典：ecs-troubleshooting.pdf, chunk_id: 1）",
+    "sources": [
+      {
+        "text": "Document RAG API - ECS障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIを稼働させているAmazon ECS / AWS\nFargate環境で障害が発生した場合の初動確認および切り分け手順を定める。\n対象となる主な事象は以下とする。\n • ECSタスクが起動しない\n • ECSタスクが予期せず停止する\n • Application Load Balancerから502または503が返される\n • Document RAG APIから503が返される\n • AWSサービスへのアクセス時にAccessDeniedが発生する\n \n2. システム基本情報\nDocument RAG APIの通常稼働時の構成は以下とする。\n項目\n設定値\nECS Desired Task Count\n1\nApplication Port\n8000\nALB Health Check Path\n/health\n正常時のHealth Check Response\n{\"status\":\"ok\"}\nCloudWatch Log Group\n/ecs/document",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.44905322790145874
+      },
+      {
+        "text": "alth Check Path\n/health\n正常時のHealth Check Response\n{\"status\":\"ok\"}\nCloudWatch Log Group\n/ecs/document-rag-api\nApplication Runtime\nAWS Fargate\nContainer Architecture\nLinux / ARM64\n通常時はECS Serviceに1つのRunning Taskが存在し、ALB Target GroupのTarget HealthがHealthyであること。\n3. 障害対応の基本フロー\nDocument RAG APIで障害が発生した場合は、以下の順序で確認する。\n1. ALB Target GroupのTarget Healthを確認する\n2. ECS ServiceのRunning Task数を確認する\n3. ECS Taskの状態およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.5150744915008545
+      },
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.5392582416534424
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.44905322790145874
+    }
+  },
+  {
+    "id": "ecs-004",
+    "question": "ロードバランサーからService Unavailableが返ってきました。最初に何を確認すればよいですか？",
+    "category": "paraphrase",
+    "answerable": true,
+    "expected_answer": "ALB Target GroupのTarget Healthを確認する",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "## ロードバランサーから503 Service Unavailableが返された場合の最初の確認事項\n\n**まず、Target GroupにHealthy Targetが存在するかを確認してください。**\n\n具体的には以下を確認します：\n\n### Targetの状態確認\n- **TargetがUnhealthyの場合** → ECS Taskの状態とHealth Checkを確認する\n  1. ECS TaskがRunningであること\n  2. Health Check Pathが `/health` であること\n  3. `/health` がHTTP 200を返すこと\n  4. Target Group Portが **8000** であること\n  5. ECS Security GroupがALBから**8000番ポート**への通信を許可していること\n\n### TargetがHealthyなのに503が返される場合\nアプリケーション内部の障害の可能性が高いため、以下を確認します：\n- **CloudWatch Logs** を確認する\n- **Bedrock、S3、S3 Vectors** などの依存サービスでエラーが発生していないか確認する",
+    "sources": [
+      {
+        "text": "Unavailableが返される場合\nALBから503 Service Unavailableが返される場合は、Target Groupにリクエストを処理できるHealthy\nTargetが存在するか確認する。\nTargetがUnhealthyの場合は、ECS Taskの状態とHealth Checkを確認する。\nTargetがHealthyであるにもかかわらずDocument RAG\nAPI自身が503を返している場合は、アプリケーション内部の障害である可能性が高い。CloudWatch\nLogsを確認し、Bedrock、S3、S3 Vectorsなどの依存サービスでエラーが発生していないか確認する。\n6. TargetがUnhealthyの場合\n1. ECS TaskがRunningであること\n2. Health Check Pathが /health であること\n3. /health がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHeal",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 3,
+        "distance": 0.5905933380126953
+      },
+      {
+        "text": "換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタックトレースを確認する必要がある。\n9. 復旧確認\n原因への対応後は以下を確認する。\n1. ECS TaskがRunningであること\n2. ALB TargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. GET /documents が正常に実行できること\n5. POST /chat が正常に回答を返すこと\nIAM Policyを変更した場合は、変更対象となったAWSサービスを利用するAPIについても動作確認を実施する。\n10. エスカレーション\n以下のいずれかに該当する場合はクラウド基盤担当者へエスカレーションする。\n • 調査開始から15分以内に原因を特定できない\n • ECS Taskが繰り返し停止する\n • 複数のAWSサービスで同時にエラーが発生している\n • IAM Policy変更が必要\n • AWSサービス自体の障害が疑われる\n エ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 7,
+        "distance": 0.6239316463470459
+      },
+      {
+        "text": "場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTargetから正常なHTTPレスポンスを受信できていない可能性\nがある。最初にTarget GroupのTarget Healthを確認する。\n• ECS TaskがRunningであること\n• FastAPIがApplication Port 8000で待ち受けていること\n• Target GroupのPortが8000であること\n• コンテナが異常終了していないこと\n• CloudWatch Logsにアプリケーションエラーが記録されていないこと\nTarget GroupとECS Application Portが一致していない場合は、ポート設定を確認する。\n\n5. 503 Service Unavailableが返される場合\nALBから503 Service Unavailableが返される場合は、Target Groupにリクエストを処理できるHealthy\nTargetが存在するか",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 2,
+        "distance": 0.655056893825531
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 2,
+      "top1_distance": 0.5905933380126953
+    }
+  },
+  {
+    "id": "ecs-005",
+    "question": "Desired Task Countは1ですが、稼働しているTaskがありません。まず何を調査しますか？",
+    "category": "paraphrase",
+    "answerable": true,
+    "expected_answer": "停止済みECS TaskのStopped Reasonを確認する",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "## 調査手順\n\n参考文書によると、**ECS ServiceのDesired Task Countが1にもかかわらずRunning Taskが0の場合**、まず以下を確認してください。\n\n---\n\n### ① 停止済みTaskの「Stopped Reason」を確認する\n\n以下のエラーが記録されていないかチェックします：\n\n| 確認項目 | 内容 |\n|----------|------|\n| `Essential container exited` | 必須コンテナが終了 |\n| `ResourceInitializationError` | リソース初期化エラー |\n| `CannotPullContainerError` | イメージ取得失敗 |\n| `OutOfMemoryError` | メモリ不足 |\n| コンテナ起動コマンドのエラー | 起動コマンドの問題 |\n\n---\n\n### ② CloudWatch Logsの起動ログを確認する\n\nコンテナが**起動直後に停止している場合**は、CloudWatch Logsの起動ログも合わせて確認します。\n\n> ⚠️ ログに **`exec format error`** が記録されている場合は、**Docker ImageのCPUアーキテクチャ**との不一致が疑われます。\n\n---\n\n### ③ エスカレーションの判断\n\n**調査開始から15分以内に原因を特定できない場合**は、クラウド基盤担当者へエスカレーションしてください。",
+    "sources": [
+      {
+        "text": "およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認する\n調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする。\n4. ECSタスクが起動しない場合\nECS ServiceのDesired Task Countが1であるにもかかわらずRunning Taskが0の場合、停止済みTaskのStopped\nReasonを確認する。\n\n確認対象は以下とする。\n • Essential container exited\n • ResourceInitializationError\n • CannotPullContainerError\n • OutOfMemoryError\n • コンテナ起動コマンドのエラー\n コンテナが起動直後に停止している場合は、CloudWatch Logsの起動ログも確認する。\nexec format error が記録されている場合は、Docker ImageのCPUアーキテクチャと",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 2,
+        "distance": 0.6498821973800659
+      },
+      {
+        "text": "されているResource ARN\n • ECS Task Roleに対象Actionが許可されているか\n • IAM PolicyのResourceが対象リソースを含んでいるか\n 権限不足が確認された場合でも、原因調査担当者が独断でFull Access Policyを付与してはならない。\n必要なActionおよびResourceを特定し、最小権限となるようIAM Policyの変更を申請する。\n8. CloudWatch Logsの確認\nアプリケーションログはCloudWatch Log Group /ecs/document-rag-api に出力される。\n障害調査時は、ユーザーに返却されたHTTPステータスだけで原因を判断せず、対応する時間帯のCloudWatch\nLogsを確認する。\nアプリケーションでは内部例外の詳細をAPIレスポンスへ直接返さず、以下のような汎用メッセージへ変換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタッ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 6,
+        "distance": 0.7382473945617676
+      },
+      {
+        "text": "換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタックトレースを確認する必要がある。\n9. 復旧確認\n原因への対応後は以下を確認する。\n1. ECS TaskがRunningであること\n2. ALB TargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. GET /documents が正常に実行できること\n5. POST /chat が正常に回答を返すこと\nIAM Policyを変更した場合は、変更対象となったAWSサービスを利用するAPIについても動作確認を実施する。\n10. エスカレーション\n以下のいずれかに該当する場合はクラウド基盤担当者へエスカレーションする。\n • 調査開始から15分以内に原因を特定できない\n • ECS Taskが繰り返し停止する\n • 複数のAWSサービスで同時にエラーが発生している\n • IAM Policy変更が必要\n • AWSサービス自体の障害が疑われる\n エ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 7,
+        "distance": 0.7429174184799194
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.6498821973800659
+    }
+  },
+  {
+    "id": "ecs-006",
+    "question": "CloudWatch LogsでAccessDeniedExceptionを確認しました。次に何を確認すべきですか？",
+    "category": "paraphrase",
+    "answerable": true,
+    "expected_answer": "ECS Task RoleのIAM Policyを確認し、エラーに記録されたActionとResourceが許可されているか確認する",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "## AccessDeniedException発生時の確認手順\n\nCloudWatch LogsにAccessDeniedExceptionが記録されている場合、**ECS Task RoleのIAM Policy**を確認してください。\n\n### 具体的な確認項目\n\n1. **エラーに記録されているAction**\n2. **エラーに記録されているResource ARN**\n3. **ECS Task Roleに対象Actionが許可されているか**\n4. **IAM PolicyのResourceが対象リソースを含んでいるか**\n\n### ⚠️ 重要な注意事項\n\n権限不足が確認された場合でも、**独断でFull Access Policyを付与してはなりません**。\n\n必要な**ActionおよびResource**を特定し、**最小権限**となるようIAM Policyの変更を申請してください。\n\n---\n\n> 📌 なお、Document RAG APIでは、AWSサービスへのアクセス権限は「ECS Task **Execution** Role」ではなく「ECS Task **Role**」に付与する点にご注意ください。",
+    "sources": [
+      {
+        "text": " S3ServiceError\n • AccessDeniedException\n /chat のみ503となる場合は、Embedding、S3 Vectors、Amazon Bedrockの順にエラーの有無を確認する。\nGET /documents が503となる場合は、Amazon S3へのアクセスエラーを確認する。\n7. AccessDeniedが発生する場合\nCloudWatch LogsにAccessDeniedExceptionが記録されている場合、ECS Task RoleのIAM Policyを確認する。\nDocument RAG APIでは、アプリケーションからAWSサービスへアクセスする権限はECS Task Execution\nRoleではなくECS Task Roleに付与する。\n\n確認対象は以下とする。\n • エラーに記録されているAction\n • エラーに記録されているResource ARN\n • ECS Task Roleに対象Actionが許可されているか\n • IAM PolicyのResourceが対象リソースを含んでいるか\n 権限不足が確認され",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.23906052112579346
+      },
+      {
+        "text": "されているResource ARN\n • ECS Task Roleに対象Actionが許可されているか\n • IAM PolicyのResourceが対象リソースを含んでいるか\n 権限不足が確認された場合でも、原因調査担当者が独断でFull Access Policyを付与してはならない。\n必要なActionおよびResourceを特定し、最小権限となるようIAM Policyの変更を申請する。\n8. CloudWatch Logsの確認\nアプリケーションログはCloudWatch Log Group /ecs/document-rag-api に出力される。\n障害調査時は、ユーザーに返却されたHTTPステータスだけで原因を判断せず、対応する時間帯のCloudWatch\nLogsを確認する。\nアプリケーションでは内部例外の詳細をAPIレスポンスへ直接返さず、以下のような汎用メッセージへ変換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタッ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 6,
+        "distance": 0.454337477684021
+      },
+      {
+        "text": "およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認する\n調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする。\n4. ECSタスクが起動しない場合\nECS ServiceのDesired Task Countが1であるにもかかわらずRunning Taskが0の場合、停止済みTaskのStopped\nReasonを確認する。\n\n確認対象は以下とする。\n • Essential container exited\n • ResourceInitializationError\n • CannotPullContainerError\n • OutOfMemoryError\n • コンテナ起動コマンドのエラー\n コンテナが起動直後に停止している場合は、CloudWatch Logsの起動ログも確認する。\nexec format error が記録されている場合は、Docker ImageのCPUアーキテクチャと",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 2,
+        "distance": 0.48545271158218384
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.23906052112579346
+    }
+  },
+  {
+    "id": "ecs-007",
+    "question": "ECS TaskはRunningでALB TargetもHealthyですが、POST /chatだけが503になります。どのように切り分けますか？",
+    "category": "multi_step",
+    "answerable": true,
+    "expected_answer": "CloudWatch Logsを確認し、Embedding、S3 Vectors、Amazon Bedrockの順にエラーの有無を確認する",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "## POST /chat のみ503となる場合の切り分け手順\n\n参考文書に基づいて、以下の手順で切り分けを行ってください。\n\n---\n\n### 1. CloudWatch Logsの確認\n\nまず、以下のLog Groupを確認してください。\n\n**Log Group:** `/ecs/document-rag-api`\n\n確認すべきエラーは以下の通りです：\n\n| エラー種別 | 確認内容 |\n|---|---|\n| `BedrockServiceError` | Amazon Bedrockの障害 |\n| `EmbeddingServiceError` | Embeddingサービスの障害 |\n| `VectorStoreServiceError` | S3 Vectorsの障害 |\n| `S3ServiceError` | S3の障害 |\n| `AccessDeniedException` | IAM権限の不足 |\n\n---\n\n### 2. `/chat` のみ503の場合の重点確認順序\n\n参考文書に明記されている通り、**以下の順番**で依存サービスのエラーを確認してください。\n\n1. **Embedding**（EmbeddingServiceError）\n2. **S3 Vectors**（VectorStoreServiceError）\n3. **Amazon Bedrock**（BedrockServiceError）\n\n---\n\n### 根拠\n\n> `/chat` のみ503となる場合は、Embedding、S3 Vectors、Amazon Bedrockの順にエラーを確認する。\n> （出典: ecs-troubleshooting.pdf, chunk_id: 4）\n\n---\n\nECS TaskもALB TargetもHealthyであることから、**インフラ層ではなくアプリケーション内部または依存AWSサービスの障害**が原因である可能性が高いため、上記のログ調査が最優先となります。",
+    "sources": [
+      {
+        "text": "Unavailableが返される場合\nALBから503 Service Unavailableが返される場合は、Target Groupにリクエストを処理できるHealthy\nTargetが存在するか確認する。\nTargetがUnhealthyの場合は、ECS Taskの状態とHealth Checkを確認する。\nTargetがHealthyであるにもかかわらずDocument RAG\nAPI自身が503を返している場合は、アプリケーション内部の障害である可能性が高い。CloudWatch\nLogsを確認し、Bedrock、S3、S3 Vectorsなどの依存サービスでエラーが発生していないか確認する。\n6. TargetがUnhealthyの場合\n1. ECS TaskがRunningであること\n2. Health Check Pathが /health であること\n3. /health がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHeal",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 3,
+        "distance": 0.35999274253845215
+      },
+      {
+        "text": "Health Check Pathが /health であること\n4. /health がHTTP 200を返すこと\nTarget Healthが3回連続でUnhealthyとなった場合は、CloudWatch\nLogsを確認してアプリケーション起動時のエラーを調査する。\n6. APIが503を返す場合\nALB TargetがHealthyで、ECS TaskもRunningであるにもかかわらずDocument RAG\nAPIが503を返す場合は、アプリケーション内部または依存AWSサービスの障害を疑う。\n最初にCloudWatch Log Group /ecs/document-rag-api を確認する。\n主な確認対象は以下とする。\n • BedrockServiceError\n • EmbeddingServiceError\n • VectorStoreServiceError\n • S3ServiceError\n • AccessDeniedException\n /chat のみ503となる場合は、Embedding、S3 Vectors、Amazon Bedrockの順にエラ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.36029648780822754
+      },
+      {
+        "text": "000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALBはインターネットからHTTP 80番ポートでリクエストを受信し、Target Groupを経由してECS\nTaskの8000番ポートへ転送する。\n3. ALB障害対応の基本フロー\n1. ALB Listenerの状態を確認する\n2. Target GroupのTarget Healthを確認する\n3. ECS TaskがRunningであることを確認する\n4. Security Groupの通信許可を確認する\n5. Health Checkの設定を確認する\n6. CloudWatch Logsでアプリケーションログを確認する\nTargetがHealthyであるにもかかわらずAPIがエラーを返す場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTa",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.3959176540374756
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 2,
+      "top1_distance": 0.35999274253845215
+    }
+  },
+  {
+    "id": "ecs-008",
+    "question": "ALB TargetがUnhealthyです。ECS TaskはRunningしています。次に確認すべき項目を説明してください。",
+    "category": "multi_step",
+    "answerable": true,
+    "expected_answer": "Security GroupでALBからECSの8000番ポートへの通信が許可されていること、Health Check Pathが /health であること、/health がHTTP 200を返すことを確認する",
+    "expected_source": "ecs-troubleshooting.pdf",
+    "answer": "## ALB Target Unhealthy の確認手順（ECS Task Running確認済み）\n\nECS TaskがRunning状態であることが確認できているため、以下の項目を順番に確認してください。\n\n---\n\n### 1. Health Check Pathの確認\n- Health Check Pathが **`/health`** に設定されていること\n- `/health` エンドポイントが **HTTP 200** を返していること\n- 正常時のレスポンスは `{\"status\":\"ok\"}` であること\n\n### 2. Target Group Portの確認\n- Target Group Portが **`8000`** に設定されていること\n\n### 3. アプリケーションの起動確認\n- **FastAPIが正常に起動**していること\n- ECS Taskが **8000番ポートで待ち受け**ていること\n\n### 4. Security Groupの確認\n- **ECS Security Group** が、ALBからの **8000番ポートへの通信を許可**していること\n\n---\n\n### まとめ\n\n| 確認項目 | 期待値 |\n|---|---|\n| Health Check Path | `/health` |\n| HTTPレスポンスコード | `200` |\n| Target Group Port | `8000` |\n| FastAPI起動状態 | 起動済み |\n| ECS Security Group | ALB → 8000番ポート 許可 |\n\nこれらを順に確認することで、Unhealthyの原因を特定できます。",
+    "sources": [
+      {
+        "text": "Unavailableが返される場合\nALBから503 Service Unavailableが返される場合は、Target Groupにリクエストを処理できるHealthy\nTargetが存在するか確認する。\nTargetがUnhealthyの場合は、ECS Taskの状態とHealth Checkを確認する。\nTargetがHealthyであるにもかかわらずDocument RAG\nAPI自身が503を返している場合は、アプリケーション内部の障害である可能性が高い。CloudWatch\nLogsを確認し、Bedrock、S3、S3 Vectorsなどの依存サービスでエラーが発生していないか確認する。\n6. TargetがUnhealthyの場合\n1. ECS TaskがRunningであること\n2. Health Check Pathが /health であること\n3. /health がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHeal",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 3,
+        "distance": 0.3571379780769348
+      },
+      {
+        "text": "000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALBはインターネットからHTTP 80番ポートでリクエストを受信し、Target Groupを経由してECS\nTaskの8000番ポートへ転送する。\n3. ALB障害対応の基本フロー\n1. ALB Listenerの状態を確認する\n2. Target GroupのTarget Healthを確認する\n3. ECS TaskがRunningであることを確認する\n4. Security Groupの通信許可を確認する\n5. Health Checkの設定を確認する\n6. CloudWatch Logsでアプリケーションログを確認する\nTargetがHealthyであるにもかかわらずAPIがエラーを返す場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTa",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.36033838987350464
+      },
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.3693903088569641
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": false,
+      "expected_source_rank": null,
+      "top1_distance": 0.3571379780769348
+    }
+  },
+  {
+    "id": "ecs-009",
+    "question": "RDSのCPU使用率が95%になっています。どのように対応すればよいですか？",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_answer": null,
+    "expected_source": null,
+    "answer": "文書からは分かりません。\n\nご質問のRDSのCPU使用率に関する対応手順は、提供された参考文書には記載されていません。本文書はAmazon ECS / AWS Fargate環境における障害対応Runbookであり、RDSに関する内容は含まれていません。\n\nRDSの対応については、別途RDS関連の運用手順書やAWSの公式ドキュメントをご参照いただくか、担当チームへお問い合わせください。",
+    "sources": [
+      {
+        "text": "およびStopped Reasonを確認する\n4. CloudWatch Logsでアプリケーションログを確認する\n5. AccessDeniedが記録されている場合はECS Task Roleを確認する\n調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする。\n4. ECSタスクが起動しない場合\nECS ServiceのDesired Task Countが1であるにもかかわらずRunning Taskが0の場合、停止済みTaskのStopped\nReasonを確認する。\n\n確認対象は以下とする。\n • Essential container exited\n • ResourceInitializationError\n • CannotPullContainerError\n • OutOfMemoryError\n • コンテナ起動コマンドのエラー\n コンテナが起動直後に停止している場合は、CloudWatch Logsの起動ログも確認する。\nexec format error が記録されている場合は、Docker ImageのCPUアーキテクチャと",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 2,
+        "distance": 0.7440004348754883
+      },
+      {
+        "text": "Document RAG API - ECS障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIを稼働させているAmazon ECS / AWS\nFargate環境で障害が発生した場合の初動確認および切り分け手順を定める。\n対象となる主な事象は以下とする。\n • ECSタスクが起動しない\n • ECSタスクが予期せず停止する\n • Application Load Balancerから502または503が返される\n • Document RAG APIから503が返される\n • AWSサービスへのアクセス時にAccessDeniedが発生する\n \n2. システム基本情報\nDocument RAG APIの通常稼働時の構成は以下とする。\n項目\n設定値\nECS Desired Task Count\n1\nApplication Port\n8000\nALB Health Check Path\n/health\n正常時のHealth Check Response\n{\"status\":\"ok\"}\nCloudWatch Log Group\n/ecs/document",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.7592066526412964
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": null,
+      "expected_source_rank": null,
+      "top1_distance": 0.7440004348754883
+    }
+  },
+  {
+    "id": "ecs-010",
+    "question": "S3に保存しているバックアップの保持期間は何日ですか？",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_answer": null,
+    "expected_source": null,
+    "answer": "文書からは分かりません。\n\n提供された参考文書には、S3のバックアップ保持期間に関する記載はありません。この情報については、別のドキュメントやS3のライフサイクルポリシー設定を確認することをお勧めします。",
+    "sources": [
+      {
+        "text": "換する。\n{\n\"detail\": \"AI service is temporarily unavailable.\"\n}\nそのため、503の詳細原因を特定する場合はCloudWatch Logsのスタックトレースを確認する必要がある。\n9. 復旧確認\n原因への対応後は以下を確認する。\n1. ECS TaskがRunningであること\n2. ALB TargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. GET /documents が正常に実行できること\n5. POST /chat が正常に回答を返すこと\nIAM Policyを変更した場合は、変更対象となったAWSサービスを利用するAPIについても動作確認を実施する。\n10. エスカレーション\n以下のいずれかに該当する場合はクラウド基盤担当者へエスカレーションする。\n • 調査開始から15分以内に原因を特定できない\n • ECS Taskが繰り返し停止する\n • 複数のAWSサービスで同時にエラーが発生している\n • IAM Policy変更が必要\n • AWSサービス自体の障害が疑われる\n エ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 7,
+        "distance": 0.8256018161773682
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": null,
+      "expected_source_rank": null,
+      "top1_distance": 0.8256018161773682
+    }
+  },
+  {
+    "id": "alb-001",
+    "question": "Document RAG APIのALBはインターネットから何番ポートでリクエストを受信しますか？",
+    "category": "direct",
+    "answerable": true,
+    "expected_answer": "HTTP 80番ポート",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answer": "## 回答\n\nDocument RAG APIのALBは、インターネットから **HTTPの80番ポート** でリクエストを受信します。\n\n参考文書には以下の記載があります：\n\n- **ALB Listener Protocol: HTTP**\n- **ALB Listener Port: 80**\n- **正常な通信経路: Internet → ALB:80 → ECS:8000**\n\nまた、ALB Security GroupはインターネットからHTTP **80番ポート**への通信を許可する設定となっています。",
+    "sources": [
+      {
+        "text": "Document RAG API - ALB障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIで使用するApplication Load Balancer（ALB）およびTarget\nGroupに関連する障害が発生した場合の初動確認と切り分け手順を定める。\n• ALBから502 Bad Gatewayが返される\n• ALBから503 Service Unavailableが返される\n• Target GroupのTargetがUnhealthyになる\n• Health Checkが失敗する\n• ALBからECS Taskへ通信できない\n2. システム基本情報\nALB Listener Protocol: HTTP\nALB Listener Port: 80\nTarget Group Protocol: HTTP\nTarget Group Port: 8000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALB",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.43999356031417847
+      },
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.4694625735282898
+      },
+      {
+        "text": " がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHealth Checkの設定が正しくてもUnhealthyが継続する場合は、CloudWatch LogsでFastAPIの起動状態を確認する。\n7. Security Groupの確認\nALB Security GroupはインターネットからHTTP 80番ポートへの通信を許可する。\nECS Security GroupはApplication Port 8000への通信を許可するが、SourceはALB Security\nGroupのみに限定する。ECS Security Groupで8000番ポートを0.0.0.0/0へ公開してはならない。\n正常な通信経路: Internet → ALB:80 → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\"",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.4694712162017822
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.43999356031417847
+    }
+  },
+  {
+    "id": "alb-002",
+    "question": "ALBのTargetがUnhealthyです。Health Checkについて何を確認すればよいですか？",
+    "category": "paraphrase",
+    "answerable": true,
+    "expected_answer": "Health Check Pathが /health であること、/health がHTTP 200を返すこと、ECS Taskが8000番ポートで待ち受けていること、ALBからECSへの通信が許可されていることを確認する",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answer": "## ALB TargetがUnhealthyの場合のHealth Check確認事項\n\n参考文書に基づき、以下の項目を確認してください。\n\n---\n\n### ✅ 確認すべき項目\n\n1. **Health Check Pathの設定**\n   - Health Check Pathが **`/health`** に設定されていること\n\n2. **アプリケーションの起動状態**\n   - **FastAPIが起動していること**\n   - ECS Taskが **8000番ポート** で待ち受けていること\n\n3. **`/health` エンドポイントの応答**\n   - `/health` にアクセスした際に **HTTP 200** で `{\"status\":\"ok\"}` が返ること\n\n4. **ネットワーク通信の許可**\n   - **ALBからECSへの通信がSecurity Groupで許可されていること**\n\n5. **ECS Taskの状態**\n   - ECS Task が **Running** 状態であること\n\n---\n\n### ⚠️ 補足\n\n- Target Healthが **3回連続でUnhealthy** となった場合は、**CloudWatch Logs（`/ecs/document-rag-api`）** を確認し、アプリケーション起動時のエラーを調査することが推奨されています。",
+    "sources": [
+      {
+        "text": "000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALBはインターネットからHTTP 80番ポートでリクエストを受信し、Target Groupを経由してECS\nTaskの8000番ポートへ転送する。\n3. ALB障害対応の基本フロー\n1. ALB Listenerの状態を確認する\n2. Target GroupのTarget Healthを確認する\n3. ECS TaskがRunningであることを確認する\n4. Security Groupの通信許可を確認する\n5. Health Checkの設定を確認する\n6. CloudWatch Logsでアプリケーションログを確認する\nTargetがHealthyであるにもかかわらずAPIがエラーを返す場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTa",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.37614136934280396
+      },
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.4390109181404114
+      },
+      {
+        "text": "Health Check Pathが /health であること\n4. /health がHTTP 200を返すこと\nTarget Healthが3回連続でUnhealthyとなった場合は、CloudWatch\nLogsを確認してアプリケーション起動時のエラーを調査する。\n6. APIが503を返す場合\nALB TargetがHealthyで、ECS TaskもRunningであるにもかかわらずDocument RAG\nAPIが503を返す場合は、アプリケーション内部または依存AWSサービスの障害を疑う。\n最初にCloudWatch Log Group /ecs/document-rag-api を確認する。\n主な確認対象は以下とする。\n • BedrockServiceError\n • EmbeddingServiceError\n • VectorStoreServiceError\n • S3ServiceError\n • AccessDeniedException\n /chat のみ503となる場合は、Embedding、S3 Vectors、Amazon Bedrockの順にエラ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.4420848488807678
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.37614136934280396
+    }
+  },
+  {
+    "id": "alb-003",
+    "question": "ECSの8000番ポートを0.0.0.0/0に公開しても問題ありませんか？",
+    "category": "paraphrase",
+    "answerable": true,
+    "expected_answer": "公開してはならない。ECSの8000番ポートへの通信元はALB Security Groupのみに限定する",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answer": "## 回答\n\n**いいえ、問題があります。ECSの8000番ポートを0.0.0.0/0に公開してはなりません。**\n\n参考文書（alb-troubleshooting.pdf）には、以下のように明記されています。\n\n> ECS Security GroupはApplication Port 8000への通信を許可するが、**SourceはALB Security Groupのみに限定する**。ECS Security Groupで8000番ポートを**0.0.0.0/0へ公開してはならない**。\n\n### 正しい設定\n\n| 項目 | 許可内容 |\n|------|---------|\n| ALB Security Group | インターネットからの **HTTP 80番ポート** への通信を許可 |\n| ECS Security Group | **ALB Security Groupからの 8000番ポート** への通信のみ許可 |\n\n### 正常な通信経路\n```\nInternet → ALB:80 → ECS:8000\n```\n\nECSの8000番ポートは、ALB Security Groupからのトラフィックのみを受け付けるように制限することが必要です。",
+    "sources": [
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.5643994808197021
+      },
+      {
+        "text": " がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHealth Checkの設定が正しくてもUnhealthyが継続する場合は、CloudWatch LogsでFastAPIの起動状態を確認する。\n7. Security Groupの確認\nALB Security GroupはインターネットからHTTP 80番ポートへの通信を許可する。\nECS Security GroupはApplication Port 8000への通信を許可するが、SourceはALB Security\nGroupのみに限定する。ECS Security Groupで8000番ポートを0.0.0.0/0へ公開してはならない。\n正常な通信経路: Internet → ALB:80 → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\"",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.5942002534866333
+      },
+      {
+        "text": "Document RAG API - ECS障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIを稼働させているAmazon ECS / AWS\nFargate環境で障害が発生した場合の初動確認および切り分け手順を定める。\n対象となる主な事象は以下とする。\n • ECSタスクが起動しない\n • ECSタスクが予期せず停止する\n • Application Load Balancerから502または503が返される\n • Document RAG APIから503が返される\n • AWSサービスへのアクセス時にAccessDeniedが発生する\n \n2. システム基本情報\nDocument RAG APIの通常稼働時の構成は以下とする。\n項目\n設定値\nECS Desired Task Count\n1\nApplication Port\n8000\nALB Health Check Path\n/health\n正常時のHealth Check Response\n{\"status\":\"ok\"}\nCloudWatch Log Group\n/ecs/document",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.6063974499702454
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 1,
+      "top1_distance": 0.5643994808197021
+    }
+  },
+  {
+    "id": "alb-004",
+    "question": "ECS TaskはRunningで /health も正常ですが、/chat が503を返します。ALBの問題として調査を続けるべきですか？",
+    "category": "multi_step",
+    "answerable": true,
+    "expected_answer": "ALB障害ではなく、アプリケーションまたは依存AWSサービスの障害として切り分け、CloudWatch LogsやBedrock、S3、S3 Vectorsのエラーを確認する",
+    "expected_source": "alb-troubleshooting.pdf",
+    "answer": "## 回答\n\n**いいえ、ALBの問題として調査を続けるべきではありません。**\n\n参考文書によると、以下の状況が該当します。\n\n---\n\n### 現在の状況の判断\n\n> *「TargetがHealthyであるにもかかわらずDocument RAG API自身が503を返している場合は、**アプリケーション内部の障害である可能性が高い**」*\n\nECS TaskがRunningで `/health` も正常（HTTP 200）ということは、ALBのTarget HealthはHealthyな状態です。この場合、問題はALBではなく**アプリケーション内部または依存AWSサービス**にあります。\n\n---\n\n### 推奨される調査手順\n\n**`/chat` のみ503となる場合**は、以下の順に依存サービスのエラーを確認してください。\n\n1. **Embedding サービス** のエラー\n2. **S3 Vectors** のエラー\n3. **Amazon Bedrock** のエラー\n\n### 確認場所\n\nCloudWatch Log Group **`/ecs/document-rag-api`** を確認し、以下のエラーが出ていないかチェックしてください。\n\n| 確認対象エラー |\n|---|\n| `BedrockServiceError` |\n| `EmbeddingServiceError` |\n| `VectorStoreServiceError` |\n| `S3ServiceError` |\n| `AccessDeniedException` |\n\n---\n\n**結論として、ALBの調査は不要であり、CloudWatch Logsと依存サービスの調査に切り替えることを推奨します。**",
+    "sources": [
+      {
+        "text": "Health Check Pathが /health であること\n4. /health がHTTP 200を返すこと\nTarget Healthが3回連続でUnhealthyとなった場合は、CloudWatch\nLogsを確認してアプリケーション起動時のエラーを調査する。\n6. APIが503を返す場合\nALB TargetがHealthyで、ECS TaskもRunningであるにもかかわらずDocument RAG\nAPIが503を返す場合は、アプリケーション内部または依存AWSサービスの障害を疑う。\n最初にCloudWatch Log Group /ecs/document-rag-api を確認する。\n主な確認対象は以下とする。\n • BedrockServiceError\n • EmbeddingServiceError\n • VectorStoreServiceError\n • S3ServiceError\n • AccessDeniedException\n /chat のみ503となる場合は、Embedding、S3 Vectors、Amazon Bedrockの順にエラ",
+        "source": "ecs-troubleshooting.pdf",
+        "chunk_id": 4,
+        "distance": 0.28450989723205566
+      },
+      {
+        "text": "Unavailableが返される場合\nALBから503 Service Unavailableが返される場合は、Target Groupにリクエストを処理できるHealthy\nTargetが存在するか確認する。\nTargetがUnhealthyの場合は、ECS Taskの状態とHealth Checkを確認する。\nTargetがHealthyであるにもかかわらずDocument RAG\nAPI自身が503を返している場合は、アプリケーション内部の障害である可能性が高い。CloudWatch\nLogsを確認し、Bedrock、S3、S3 Vectorsなどの依存サービスでエラーが発生していないか確認する。\n6. TargetがUnhealthyの場合\n1. ECS TaskがRunningであること\n2. Health Check Pathが /health であること\n3. /health がHTTP 200を返すこと\n4. Target Group Portが8000であること\n5. ECS Security GroupがALBから8000番ポートへの通信を許可していること\nHeal",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 3,
+        "distance": 0.29113203287124634
+      },
+      {
+        "text": "000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALBはインターネットからHTTP 80番ポートでリクエストを受信し、Target Groupを経由してECS\nTaskの8000番ポートへ転送する。\n3. ALB障害対応の基本フロー\n1. ALB Listenerの状態を確認する\n2. Target GroupのTarget Healthを確認する\n3. ECS TaskがRunningであることを確認する\n4. Security Groupの通信許可を確認する\n5. Health Checkの設定を確認する\n6. CloudWatch Logsでアプリケーションログを確認する\nTargetがHealthyであるにもかかわらずAPIがエラーを返す場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTa",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.36733514070510864
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": true,
+      "expected_source_rank": 2,
+      "top1_distance": 0.28450989723205566
+    }
+  },
+  {
+    "id": "alb-005",
+    "question": "ALBのTLS証明書の有効期限は何日前から更新すべきですか？",
+    "category": "unanswerable",
+    "answerable": false,
+    "expected_answer": null,
+    "expected_source": null,
+    "answer": "文書からは分かりません。\n\n提供された参考文書（alb-troubleshooting.pdf）には、TLS証明書の有効期限や更新タイミングに関する記載はありません。このRunbookは主にALBおよびTarget Groupの障害対応手順（502/503エラー、ヘルスチェック失敗など）に関する内容となっています。",
+    "sources": [
+      {
+        "text": "000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALBはインターネットからHTTP 80番ポートでリクエストを受信し、Target Groupを経由してECS\nTaskの8000番ポートへ転送する。\n3. ALB障害対応の基本フロー\n1. ALB Listenerの状態を確認する\n2. Target GroupのTarget Healthを確認する\n3. ECS TaskがRunningであることを確認する\n4. Security Groupの通信許可を確認する\n5. Health Checkの設定を確認する\n6. CloudWatch Logsでアプリケーションログを確認する\nTargetがHealthyであるにもかかわらずAPIがエラーを返す場合は、ALBよりもアプリケーションまたは依存AWSサ\nービスの障害を疑う。\n4. 502 Bad Gatewayが返される場合\nALBから502 Bad Gatewayが返される場合は、ALBがTa",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 1,
+        "distance": 0.6562364101409912
+      },
+      {
+        "text": " → ECS:8000\n8. Health Checkの確認\nALBは /health を使用してDocument RAG APIの稼働状態を確認する。正常時にはHTTP 200で {\"status\":\"ok\"}\nを返す。\n• Health Check Pathが /health であること\n• FastAPIが起動していること\n• ECS Taskが8000番ポートで待ち受けていること\n• ALBからECSへの通信がSecurity Groupで許可されていること\n/health が正常でも /chat や /documents\nが503を返す場合は、ALB障害ではなくアプリケーションまたは依存サービスの障害として切り分ける。\n9. 復旧確認\n1. ECS TaskがRunningであること\n2. Target GroupのTargetがHealthyであること\n3. /health がHTTP 200を返すこと\n4. ALB経由でSwagger UIへアクセスできること\n5. Document RAG APIの主要APIが正常に実行できること\nTargetがHealthyになっただ",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 5,
+        "distance": 0.6635177135467529
+      },
+      {
+        "text": "Document RAG API - ALB障害対応Runbook\n1. 目的\n本Runbookは、Document RAG APIで使用するApplication Load Balancer（ALB）およびTarget\nGroupに関連する障害が発生した場合の初動確認と切り分け手順を定める。\n• ALBから502 Bad Gatewayが返される\n• ALBから503 Service Unavailableが返される\n• Target GroupのTargetがUnhealthyになる\n• Health Checkが失敗する\n• ALBからECS Taskへ通信できない\n2. システム基本情報\nALB Listener Protocol: HTTP\nALB Listener Port: 80\nTarget Group Protocol: HTTP\nTarget Group Port: 8000\nTarget Type: IP\nHealth Check Path: /health\nApplication Port: 8000\nHealthy Response Code: 200\nALB",
+        "source": "alb-troubleshooting.pdf",
+        "chunk_id": 0,
+        "distance": 0.6721696853637695
+      }
+    ],
+    "retrieval": {
+      "expected_source_found": null,
+      "expected_source_rank": null,
+      "top1_distance": 0.6562364101409912
+    }
+  }
+]
