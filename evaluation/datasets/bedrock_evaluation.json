@@ -1,0 +1,55 @@
+[
+  {
+    "id": "bedrock-001",
+    "question": "Document RAG APIではEmbedding生成と回答生成にそれぞれどのモデルを使用していますか？",
+    "category": "direct",
+    "expected_answer": "Embedding生成にはAmazon Titan Text Embeddings V2、回答生成にはClaude Sonnet 4.6を使用する",
+    "expected_section": "2. Document RAG APIにおけるBedrockの役割",
+    "expected_sources": [
+      "bedrock-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "bedrock-002",
+    "question": "POST /chatでEmbeddingServiceErrorが発生しました。Bedrockについて何を確認すべきですか？",
+    "category": "paraphrase",
+    "expected_answer": "Titan Text Embeddings V2のModel ID、AWS Region、ECS Task Roleのbedrock:InvokeModel権限、対象Foundation Modelへアクセス可能であることを確認する",
+    "expected_section": "4. Embedding生成に失敗する場合",
+    "expected_sources": [
+      "bedrock-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "bedrock-003",
+    "question": "S3 Vectorsによる検索は成功していますが、その後の回答生成で失敗しています。どこを調査しますか？",
+    "category": "paraphrase",
+    "expected_answer": "Claudeによる回答生成側を調査し、BedrockServiceError、ClaudeのModel IDまたはInference Profile ID、AWS Region、bedrock:InvokeModel権限、Inference Profileの状態を確認する",
+    "expected_section": "5. Claudeによる回答生成に失敗する場合",
+    "expected_sources": [
+      "bedrock-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "bedrock-004",
+    "question": "POST /chatが503を返しています。CloudWatch LogsにはVectorStoreServiceErrorが記録されています。Claudeの障害として調査すべきですか？",
+    "category": "multi_step",
+    "expected_answer": "Claudeの障害として扱わない。VectorStoreServiceErrorはS3 Vectors検索処理の失敗を示しており、Claudeによる回答生成より前の段階で失敗しているため、S3 Vectors側を調査する",
+    "expected_section": "10. 503発生時の切り分け",
+    "expected_sources": [
+      "bedrock-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "bedrock-005",
+    "question": "Claude Sonnet 4.6の1リクエストあたりの料金はいくらですか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  }
+]

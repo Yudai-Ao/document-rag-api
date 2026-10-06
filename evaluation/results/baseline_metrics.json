@@ -5,12 +5,12 @@
     "top_k": 3
   },
   "metrics": {
-    "total_cases": 15,
-    "answerable_cases": 12,
-    "unanswerable_cases": 3,
-    "expected_source_hit_rate": 0.9166666666666666,
-    "expected_source_top1_rate": 0.6666666666666666,
-    "answerable_avg_top1_distance": 0.4675293316443761,
-    "unanswerable_avg_top1_distance": 0.7419462203979492
+    "total_cases": 34,
+    "answerable_cases": 24,
+    "unanswerable_cases": 10,
+    "expected_source_hit_rate": 1.0,
+    "expected_source_top1_rate": 0.9166666666666666,
+    "answerable_avg_top1_distance": 0.42440661539634067,
+    "unanswerable_avg_top1_distance": 0.6199961602687836
   }
 }

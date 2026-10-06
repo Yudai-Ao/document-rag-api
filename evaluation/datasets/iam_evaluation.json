@@ -1,0 +1,58 @@
+[
+  {
+    "id": "iam-001",
+    "question": "Document RAG APIのアプリケーションからBedrockへアクセスする権限は、ECS Task RoleとTask Execution Roleのどちらに付与しますか？",
+    "category": "direct",
+    "expected_answer": "ECS Task Roleに付与する",
+    "expected_section": "3. ECS Task RoleとTask Execution Role",
+    "expected_sources": [
+      "iam-troubleshooting.pdf",
+      "ecs-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "iam-002",
+    "question": "CloudWatch LogsにAccessDeniedExceptionが出ています。エラーメッセージから何を確認すればよいですか？",
+    "category": "paraphrase",
+    "expected_answer": "Principal、Action、Resourceを特定し、対象PrincipalのIAM PolicyでActionとResourceが許可されているか確認する",
+    "expected_section": "4. AccessDeniedExceptionの確認",
+    "expected_sources": [
+      "iam-troubleshooting.pdf",
+      "ecs-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "iam-003",
+    "question": "S3のIAM PolicyでObject操作とBucket自体への操作ではResourceをどのように設定しますか？",
+    "category": "paraphrase",
+    "expected_answer": "Object操作ではObject ARNを指定し、Bucket自体への操作ではBucket ARNを指定する",
+    "expected_section": "6. Amazon S3のAccessDenied",
+    "expected_sources": [
+      "iam-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "iam-004",
+    "question": "/chatでS3 VectorsのAccessDeniedが発生し、ログにはs3vectors:GetVectorsが拒否されたと記録されています。どのように対応しますか？",
+    "category": "multi_step",
+    "expected_answer": "ECS Task RoleのS3 Vectors用IAM Policyを確認し、s3vectors:GetVectorsが対象Resourceに対して許可されているか確認する。必要なActionとResourceのみを最小権限で追加し、/chatを再実行して復旧確認する",
+    "expected_section": "7. Amazon S3 VectorsのAccessDenied",
+    "expected_sources": [
+      "iam-troubleshooting.pdf",
+      "ecs-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "iam-005",
+    "question": "IAMユーザーのパスワードは何日ごとに変更する必要がありますか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  }
+]

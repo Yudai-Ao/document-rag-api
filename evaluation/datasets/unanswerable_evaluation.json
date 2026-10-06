@@ -1,0 +1,38 @@
+[
+  {
+    "id": "unanswerable-001",
+    "question": "Document RAG APIのECS TaskにはCPUを何vCPU割り当てていますか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  },
+  {
+    "id": "unanswerable-002",
+    "question": "Document RAG APIのS3バケットではVersioningを有効にしていますか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  },
+  {
+    "id": "unanswerable-003",
+    "question": "Document RAG APIのIAMではMFAを必須にしていますか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  },
+  {
+    "id": "unanswerable-004",
+    "question": "Document RAG APIで利用しているClaude Sonnet 4.6の最大コンテキスト長はいくつですか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  }
+]

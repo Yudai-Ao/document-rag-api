@@ -5,7 +5,10 @@
     "category": "direct",
     "expected_answer": "8000",
     "expected_section": "2. システム基本情報",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf",
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -14,7 +17,10 @@
     "category": "direct",
     "expected_answer": "15分以内",
     "expected_section": "3. 障害対応の基本フロー",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf",
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -23,7 +29,9 @@
     "category": "direct",
     "expected_answer": "Linux / ARM64",
     "expected_section": "4. ECSタスクが起動しない場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -32,7 +40,10 @@
     "category": "paraphrase",
     "expected_answer": "ALB Target GroupのTarget Healthを確認する",
     "expected_section": "5. ALBから502または503が返される場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf",
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -41,7 +52,9 @@
     "category": "paraphrase",
     "expected_answer": "停止済みECS TaskのStopped Reasonを確認する",
     "expected_section": "4. ECSタスクが起動しない場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -50,7 +63,9 @@
     "category": "paraphrase",
     "expected_answer": "ECS Task RoleのIAM Policyを確認し、エラーに記録されたActionとResourceが許可されているか確認する",
     "expected_section": "7. AccessDeniedが発生する場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -59,7 +74,9 @@
     "category": "multi_step",
     "expected_answer": "CloudWatch Logsを確認し、Embedding、S3 Vectors、Amazon Bedrockの順にエラーの有無を確認する",
     "expected_section": "6. APIが503を返す場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -68,7 +85,10 @@
     "category": "multi_step",
     "expected_answer": "Security GroupでALBからECSの8000番ポートへの通信が許可されていること、Health Check Pathが /health であること、/health がHTTP 200を返すことを確認する",
     "expected_section": "5. ALBから502または503が返される場合",
-    "expected_source": "ecs-troubleshooting.pdf",
+    "expected_sources": [
+      "ecs-troubleshooting.pdf",
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -77,7 +97,7 @@
     "category": "unanswerable",
     "expected_answer": null,
     "expected_section": null,
-    "expected_source": null,
+    "expected_sources": [],
     "answerable": false
   },
   {
@@ -86,7 +106,7 @@
     "category": "unanswerable",
     "expected_answer": null,
     "expected_section": null,
-    "expected_source": null,
+    "expected_sources": [],
     "answerable": false
   }
 ]
