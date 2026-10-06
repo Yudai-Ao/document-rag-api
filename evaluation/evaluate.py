@@ -67,7 +67,6 @@ def build_evaluate_result(
             "top1_distance": top1_distance
         }
     }
-        
 
 
 def main():
