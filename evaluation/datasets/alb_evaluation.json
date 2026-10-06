@@ -5,7 +5,9 @@
     "category": "direct",
     "expected_answer": "HTTP 80番ポート",
     "expected_section": "2. システム基本情報",
-    "expected_source": "alb-troubleshooting.pdf",
+    "expected_sources": [
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -14,7 +16,10 @@
     "category": "paraphrase",
     "expected_answer": "Health Check Pathが /health であること、/health がHTTP 200を返すこと、ECS Taskが8000番ポートで待ち受けていること、ALBからECSへの通信が許可されていることを確認する",
     "expected_section": "8. Health Checkの確認",
-    "expected_source": "alb-troubleshooting.pdf",
+    "expected_sources": [
+      "alb-troubleshooting.pdf",
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -23,7 +28,9 @@
     "category": "paraphrase",
     "expected_answer": "公開してはならない。ECSの8000番ポートへの通信元はALB Security Groupのみに限定する",
     "expected_section": "7. Security Groupの確認",
-    "expected_source": "alb-troubleshooting.pdf",
+    "expected_sources": [
+      "alb-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -32,7 +39,10 @@
     "category": "multi_step",
     "expected_answer": "ALB障害ではなく、アプリケーションまたは依存AWSサービスの障害として切り分け、CloudWatch LogsやBedrock、S3、S3 Vectorsのエラーを確認する",
     "expected_section": "5. 503 Service Unavailableが返される場合",
-    "expected_source": "alb-troubleshooting.pdf",
+    "expected_sources": [
+      "alb-troubleshooting.pdf",
+      "ecs-troubleshooting.pdf"
+    ],
     "answerable": true
   },
   {
@@ -41,7 +51,7 @@
     "category": "unanswerable",
     "expected_answer": null,
     "expected_section": null,
-    "expected_source": null,
+    "expected_sources": [],
     "answerable": false
   }
 ]

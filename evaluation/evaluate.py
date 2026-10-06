@@ -38,13 +38,13 @@ def build_evaluate_result(
     expected_source_rank = None
 
     if case["answerable"]:
-        expected_source = case["expected_source"]
+        expected_sources = case["expected_sources"]
 
         for rank, context in enumerate(
             contexts,
             start=1
         ):
-            if context["source"] == expected_source:
+            if context["source"] in expected_sources:
                 expected_source_found = True
                 expected_source_rank = rank
                 break
@@ -58,7 +58,7 @@ def build_evaluate_result(
         "category": case["category"],
         "answerable": case["answerable"],
         "expected_answer": case["expected_answer"],
-        "expected_source": case["expected_source"],
+        "expected_sources": case["expected_sources"],
         "answer": rag_result["answer"],
         "sources": contexts,
         "retrieval": {
@@ -71,15 +71,26 @@ def build_evaluate_result(
 
 
 def main():
-    ecs_cases = load_dataset(
-        "ecs_evaluation.json"
-    )
+    ecs_cases = load_dataset("ecs_evaluation.json")
 
-    alb_cases = load_dataset(
-        "alb_evaluation.json"
-    )
+    alb_cases = load_dataset("alb_evaluation.json")
 
-    evaluation_cases = ecs_cases + alb_cases
+    iam_cases = load_dataset("iam_evaluation.json")
+
+    s3_cases = load_dataset("s3_evaluation.json")
+
+    bedrock_cases = load_dataset("bedrock_evaluation.json")
+
+    unanswerable_cases = load_dataset("unanswerable_evaluation.json")
+
+    evaluation_cases = (
+        ecs_cases
+        + alb_cases
+        + iam_cases
+        + s3_cases
+        + bedrock_cases
+        + unanswerable_cases
+    )
 
     print(
         f"{len(evaluation_cases)} evaluation cases loaded."

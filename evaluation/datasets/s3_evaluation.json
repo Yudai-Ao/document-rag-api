@@ -1,0 +1,55 @@
+[
+  {
+    "id": "s3-001",
+    "question": "Document RAG APIではAmazon S3にどのようなデータを保存していますか？",
+    "category": "direct",
+    "expected_answer": "アップロードされたPDFファイルとDocument Metadataを保存する。Document Metadataにはdocument_id、filename、chunk_countなどを記録する",
+    "expected_section": "2. Document RAG APIにおけるS3の役割",
+    "expected_sources": [
+      "s3-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "s3-002",
+    "question": "Document Metadataには文書が存在していますが、PDF本体を取得できません。何を確認すべきですか？",
+    "category": "paraphrase",
+    "expected_answer": "S3上に対象PDF Objectが存在すること、document_idとObject Keyの対応、s3:GetObject権限、IAM PolicyのResourceを確認する。Metadataのみ存在してPDF Objectがない場合はデータ不整合として扱う",
+    "expected_section": "5. 登録済み文書を取得できない場合",
+    "expected_sources": [
+      "s3-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "s3-003",
+    "question": "文書を削除したはずなのに、その文書の内容が全文書横断検索の結果に表示されます。何が起きている可能性がありますか？",
+    "category": "paraphrase",
+    "expected_answer": "S3のDocument Metadataは削除されているが、S3 Vectors上に対象文書のVectorが残った孤児Vectorが発生している可能性がある",
+    "expected_section": "6. 文書削除に失敗する場合",
+    "expected_sources": [
+      "s3-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "s3-004",
+    "question": "S3のDocument Metadataでは2文書だけ登録されていますが、S3 Vectorsにはそれ以上の文書のVectorが存在しています。どのように調査・復旧しますか？",
+    "category": "multi_step",
+    "expected_answer": "S3のdocument_idとchunk_countをS3 VectorsのVector Key、document_id、source、chunk_indexと比較し、現在有効なdocument_idに属さない孤児Vectorを特定する。有効なVectorを残して不要Vectorのみ削除し、削除後に各文書のVector数とchunk_countが一致することを再確認する",
+    "expected_section": "7. S3とS3 Vectorsのデータ不整合",
+    "expected_sources": [
+      "s3-troubleshooting.pdf"
+    ],
+    "answerable": true
+  },
+  {
+    "id": "s3-005",
+    "question": "Document RAG APIのS3バケットでは、PDFを何日後に自動削除するライフサイクルルールになっていますか？",
+    "category": "unanswerable",
+    "expected_answer": null,
+    "expected_section": null,
+    "expected_sources": [],
+    "answerable": false
+  }
+]
