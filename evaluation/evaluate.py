@@ -218,7 +218,8 @@ def main():
         # 失敗時は例外を伝播させ、未完了の質問を保存しない
         result = generate_rag_answer(
             question=case["question"],
-            document_id=None
+            document_id=None,
+            top_k=3
         )
 
         evaluation_result = build_evaluate_result(
