@@ -1,0 +1,393 @@
+[
+  {
+    "id": "ecs-001",
+    "category": "direct",
+    "question": "Document RAG APIのApplication Portは何番ですか？",
+    "expected_answer": "8000",
+    "generated_answer": "参考文書によると、Document RAG APIの**Application Portは8000番**です。\n\n（出典：alb-troubleshooting.pdf）",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はApplication Portが8000番であると正確に述べており、期待回答の重要事項を満たしている"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "alb-troubleshooting.pdfのEvidenceに「Application Port: 8000」と明記されており、生成回答の主張はEvidenceによって裏付けられている"
+      }
+    }
+  },
+  {
+    "id": "ecs-002",
+    "category": "direct",
+    "question": "障害調査を開始してから何分以内に原因を特定できなければエスカレーションしますか？",
+    "expected_answer": "15分以内",
+    "generated_answer": "参考文書によると、**調査開始から15分以内**に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする必要があります。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は「調査開始から15分以内」と明示しており、期待回答の「15分以内」と一致している。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主張「調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする」は、Evidenceの「調査開始から15分以内に原因を特定できない場合は、クラウド基盤担当者へエスカレーションする。」という記述によって裏付けられている。"
+      }
+    }
+  },
+  {
+    "id": "ecs-003",
+    "category": "direct",
+    "question": "Document RAG APIのECS TaskはどのCPUアーキテクチャを使用しますか？",
+    "expected_answer": "Linux / ARM64",
+    "generated_answer": "参考文書によると、Document RAG APIのECS Taskは **Linux / ARM64** のCPUアーキテクチャを使用します。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は「Linux / ARM64」と明示しており、期待回答と完全に一致している。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "Evidenceのecs-troubleshooting.pdfに「Container Architecture: Linux / ARM64」と明記されており、生成回答の主張はEvidenceによって裏付けられている。"
+      }
+    }
+  },
+  {
+    "id": "ecs-004",
+    "category": "paraphrase",
+    "question": "ロードバランサーからService Unavailableが返ってきました。最初に何を確認すればよいですか？",
+    "expected_answer": "ALB Target GroupのTarget Healthを確認する",
+    "generated_answer": "## 確認手順\n\nALBから**503 Service Unavailable**が返されている場合、最初に以下を確認してください。\n\n### ✅ まず確認すること：Target GroupにHealthy Targetが存在するか\n\n**Target GroupにリクエストPを処理できるHealthy Targetが存在するかどうか**を確認してください。\n\n---\n\n### その結果に応じた次のステップ\n\n| 状況 | 次のアクション |\n|------|--------------|\n| **TargetがUnhealthy** | ECS Taskの状態とHealth Checkを確認する |\n| **TargetがHealthyなのに503が返る** | アプリケーション内部の障害の可能性あり。**CloudWatch Logs**を確認し、Bedrock・S3・S3 Vectorsなどの依存サービスでエラーが発生していないか調べる |\n\n---\n\n### TargetがUnhealthyだった場合のチェックリスト\n\n1. ECS Task が **Running** であること\n2. Health Check Pathが **`/health`** であること\n3. `/health` が **HTTP 200** を返すこと\n4. Target Group Portが **8000** であること\n5. ECS Security GroupがALBから **8000番ポートへの通信を許可** していること",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は「Target GroupにHealthy Targetが存在するか確認する」ことを最初のステップとして明示しており、期待回答の「ALB Target GroupのTarget Healthを確認する」という重要事項を満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の全ての主張（503時のTarget Group確認、UnhealthyならECS Task/Health Check確認、HealthyでもアプリがエラーならCloudWatch Logsで依存サービス確認、チェックリストの5項目）はすべてEvidence（alb-troubleshooting.pdf）に記載された内容と一致しており、Evidence外の情報を一般知識で補完している箇所は見当たらない。"
+      }
+    }
+  },
+  {
+    "id": "ecs-005",
+    "category": "paraphrase",
+    "question": "Desired Task Countは1ですが、稼働しているTaskがありません。まず何を調査しますか？",
+    "expected_answer": "停止済みECS TaskのStopped Reasonを確認する",
+    "generated_answer": "## 調査手順\n\n**停止済みタスクの「Stopped Reason」を確認**することから始めてください。\n\n---\n\n### 確認すべきStopped Reasonの内容\n\n以下の項目が対象です：\n\n| 確認項目 | 内容 |\n|----------|------|\n| `Essential container exited` | 必須コンテナの異常終了 |\n| `ResourceInitializationError` | リソース初期化エラー |\n| `CannotPullContainerError` | コンテナイメージの取得失敗 |\n| `OutOfMemoryError` | メモリ不足 |\n| コンテナ起動コマンドのエラー | 起動時のコマンド失敗 |\n\n---\n\n### 追加確認事項\n\n- **コンテナが起動直後に停止している場合**は、**CloudWatch Logs の起動ログ**も合わせて確認してください。\n- ログに `exec format error` が記録されている場合は、**Docker Image の CPU アーキテクチャ**との不一致を疑ってください。\n\n---\n\n### ⚠️ 時間的な注意点\n\n調査開始から **15分以内に原因を特定できない場合**は、**クラウド基盤担当者へエスカレーション**してください。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は「停止済みタスクのStopped Reasonを確認する」という期待回答の重要事項を満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答に含まれる実質的な主張（Stopped Reasonの確認、確認対象の項目一覧、CloudWatch Logsの起動ログ確認、exec format errorとCPUアーキテクチャの不一致、15分以内にエスカレーション）はすべてEvidenceに記載されており、一般知識による補完は見られない。"
+      }
+    }
+  },
+  {
+    "id": "ecs-006",
+    "category": "paraphrase",
+    "question": "CloudWatch LogsでAccessDeniedExceptionを確認しました。次に何を確認すべきですか？",
+    "expected_answer": "ECS Task RoleのIAM Policyを確認し、エラーに記録されたActionとResourceが許可されているか確認する",
+    "generated_answer": "## AccessDeniedException 発生時の確認手順\n\nCloudWatch LogsでAccessDeniedExceptionを確認した場合、**エラーメッセージから以下の3つの情報を特定**してください。\n\n1. **Principal**（APIを実行したユーザー/ロール）\n2. **Action**（拒否されたAPI操作）\n3. **Resource**（アクセス対象のリソースARN）\n\n---\n\n## その後の確認手順\n\n上記を特定した後、以下の順序で確認を進めます。\n\n1. AWS APIを実行した **Principalに付与されているIAM Policy** を確認する\n2. PolicyのActionおよびResourceが **対象APIを許可しているか** 確認する\n\n### ECS環境の場合の注意点\n- Document RAG APIでは、アプリケーション（BedrockやS3など）へのアクセス権限は **ECS Task Role** に付与します\n- **ECS Task Execution Role** にアプリケーションからの権限を追加しないよう注意してください\n\n---\n\n## ⚠️ 重要な注意事項\n\n権限不足が原因であっても、**Full Access Policyを付与して解決してはいけません**。\n必要な **ActionおよびResource を特定し、最小権限となるよう** 権限を追加してください。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はECS Task RoleのIAM Policyを確認し、エラーに記録されたActionとResourceが許可されているか確認するという期待回答の重要事項を満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張（Principal/Action/Resourceの特定、ECS Task RoleのIAM Policy確認、ECS Task Execution Roleへの権限追加を避ける注意、最小権限の原則）はすべてEvidenceに裏付けられている。"
+      }
+    }
+  },
+  {
+    "id": "ecs-007",
+    "category": "multi_step",
+    "question": "ECS TaskはRunningでALB TargetもHealthyですが、POST /chatだけが503になります。どのように切り分けますか？",
+    "expected_answer": "CloudWatch Logsを確認し、Embedding、S3 Vectors、Amazon Bedrockの順にエラーの有無を確認する",
+    "generated_answer": "## POST /chat のみ503エラーの切り分け手順\n\n参考文書に基づき、以下の手順で切り分けを行ってください。\n\n---\n\n### 原因の見立て\n\nECS TaskがRunningかつALB TargetがHealthyであるにもかかわらず503が返される場合は、**アプリケーション内部または依存AWSサービスの障害**が原因である可能性が高いです。\n\n特に `/chat` **のみ**503となる場合は、以下のサービスが疑われます：\n\n> **Embedding → S3 Vectors → Amazon Bedrock** の順にエラーを確認\n\n---\n\n### 具体的な切り分け手順\n\n#### 1. CloudWatch Logsを確認する\n- **Log Group**: `/ecs/document-rag-api`\n- 以下のエラーキーワードを重点的に確認する：\n\n| エラーキーワード | 疑われる障害 |\n|---|---|\n| `BedrockServiceError` | Amazon Bedrock の障害 |\n| `EmbeddingServiceError` | Embedding サービスの障害 |\n| `VectorStoreServiceError` | S3 Vectors の障害 |\n| `S3ServiceError` | S3 の障害 |\n| `AccessDeniedException` | IAM権限の問題 |\n\n#### 2. 依存サービスの状態を確認する\nCloudWatch Logsのエラー内容に応じて、**Bedrock・S3 Vectors・S3** それぞれのサービス状態やIAMポリシーを確認する。\n\n---\n\n### まとめ\n\n`/health` は正常（200応答）でも `/chat` のみ503になるケースは、**アプリケーションが依存する外部AWSサービス（Bedrock・S3 Vectors・S3等）との通信エラー**が主因と考えられます。まず CloudWatch Logs `/ecs/document-rag-api` のエラーログを起点に調査することを推奨します。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はCloudWatch Logsを確認し、Embedding、S3 Vectors、Amazon Bedrockの順にエラーを確認するという期待回答の重要事項を満たしている。具体的な手順やエラーキーワードの追加情報も含まれているが、期待回答の核心部分は正確に反映されている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張はすべてEvidenceによって裏付けられている。CloudWatch Logsの確認、Log Group /ecs/document-rag-api、BedrockServiceError・EmbeddingServiceError・VectorStoreServiceError・S3ServiceError・AccessDeniedExceptionなどのエラーキーワード、/chatのみ503の場合にEmbedding・S3 Vectors・Amazon Bedrockの順に確認する点は、ecs-troubleshooting.pdfおよびalb-troubleshooting.pdfのEvidenceに明示されている。"
+      }
+    }
+  },
+  {
+    "id": "ecs-008",
+    "category": "multi_step",
+    "question": "ALB TargetがUnhealthyです。ECS TaskはRunningしています。次に確認すべき項目を説明してください。",
+    "expected_answer": "Security GroupでALBからECSの8000番ポートへの通信が許可されていること、Health Check Pathが /health であること、/health がHTTP 200を返すことを確認する",
+    "generated_answer": "## ALB TargetがUnhealthy（ECS Task Running確認済み）の場合の次の確認手順\n\n参考文書によると、ECS TaskがRunning確認済みの場合、以下の項目を順に確認してください。\n\n---\n\n### ✅ 確認項目\n\n#### 1. **Health Check Pathの確認**\n- Health Check Pathが **`/health`** に設定されていること\n\n#### 2. **`/health` エンドポイントのレスポンス確認**\n- `/health` にアクセスして **HTTP 200** が返されること\n- 正常時は `{\"status\":\"ok\"}` が返される\n\n#### 3. **Target Group Portの確認**\n- Target Group Portが **`8000`** に設定されていること\n\n#### 4. **Security Groupの通信許可確認**\n- **ECS Security Group** が、ALBからの **8000番ポートへの通信を許可**していること\n\n---\n\n### 📋 まとめ\n\n| 確認項目 | 期待値 |\n|---|---|\n| Health Check Path | `/health` |\n| `/health` のレスポンス | HTTP 200 |\n| Target Group Port | 8000 |\n| ECS Security Group | ALBからポート8000の通信を許可 |\n\nこれらを確認後、問題が解決しない場合は **CloudWatch Logs** でアプリケーションログを確認することが推奨されています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（Security GroupでALBからECSの8000番ポートへの通信許可、Health Check Pathが/health、/healthがHTTP 200を返すこと）をすべて含んでいる。追加項目（Target Group Portの確認など）も含まれているが、期待回答の重要事項は満たされている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張はすべてEvidenceによって裏付けられている。Health Check Pathが/healthであること、HTTP 200が返されること、Target Group Portが8000であること、ECS Security GroupがALBから8000番ポートへの通信を許可すること、正常時に{\"status\":\"ok\"}が返されること、問題が解決しない場合にCloudWatch Logsを確認することなど、すべてEvidenceに記載されている。"
+      }
+    }
+  },
+  {
+    "id": "alb-001",
+    "category": "direct",
+    "question": "Document RAG APIのALBはインターネットから何番ポートでリクエストを受信しますか？",
+    "expected_answer": "HTTP 80番ポート",
+    "generated_answer": "## 回答\n\nDocument RAG APIのALBは、インターネットから**80番ポート（HTTP）**でリクエストを受信します。\n\n参考文書には以下のように記載されています：\n- **ALB Listener Protocol**: HTTP\n- **ALB Listener Port**: 80\n- **正常な通信経路**: Internet → ALB:**80** → ECS:8000",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はHTTP 80番ポートでリクエストを受信すると正確に回答しており、期待回答の重要事項を満たしている"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主張（ALB Listener Port: 80、HTTP、Internet → ALB:80 → ECS:8000）はすべてEvidenceに明記されており、一般知識による補完はない"
+      }
+    }
+  },
+  {
+    "id": "alb-002",
+    "category": "paraphrase",
+    "question": "ALBのTargetがUnhealthyです。Health Checkについて何を確認すればよいですか？",
+    "expected_answer": "Health Check Pathが /health であること、/health がHTTP 200を返すこと、ECS Taskが8000番ポートで待ち受けていること、ALBからECSへの通信が許可されていることを確認する",
+    "generated_answer": "## ALB TargetがUnhealthyの場合のHealth Check確認事項\n\n参考文書に基づき、以下の項目を確認してください。\n\n---\n\n### ✅ 確認すべき項目\n\n1. **Health Check Pathの設定**\n   - Health Check Pathが **`/health`** に設定されていること\n\n2. **アプリケーションの起動状態**\n   - **FastAPIが起動していること**\n\n3. **ECS Taskのポート待受**\n   - ECS Taskが **8000番ポート**で待ち受けていること\n\n4. **Security Groupの通信許可**\n   - **ALBからECSへの通信**がSecurity Groupで許可されていること\n\n5. **ヘルスチェックレスポンスの確認**\n   - `/health` エンドポイントが **HTTP 200** で `{\"status\":\"ok\"}` を返すこと\n\n---\n\n### ⚠️ 追加対応\n\n- Target Healthが **3回連続でUnhealthy** となった場合は、**CloudWatch Logs（`/ecs/document-rag-api`）** を確認し、アプリケーション起動時のエラーを調査してください。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（Health Check Pathが/healthであること、/healthがHTTP 200を返すこと、ECS Taskが8000番ポートで待ち受けていること、ALBからECSへの通信が許可されていること）をすべて満たしている。FastAPIの起動確認やレスポンスボディの記載など追加情報も含まれているが、期待回答の内容に不足はない。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の実質的な主張はすべてEvidenceに裏付けられている。Health Check Pathが/health、HTTP 200、ECS Taskが8000番ポート、ALBからECSへのSecurity Group許可、FastAPIの起動確認、{'status':'ok'}レスポンス、3回連続UnhealthyでのCloudWatch Logs確認（/ecs/document-rag-api）はいずれもEvidenceに明記されている。"
+      }
+    }
+  },
+  {
+    "id": "alb-003",
+    "category": "paraphrase",
+    "question": "ECSの8000番ポートを0.0.0.0/0に公開しても問題ありませんか？",
+    "expected_answer": "公開してはならない。ECSの8000番ポートへの通信元はALB Security Groupのみに限定する",
+    "generated_answer": "## 回答\n\n**いいえ、問題があります。公開してはなりません。**\n\n参考文書（alb-troubleshooting.pdf, chunk_id: 4）に以下のように明記されています。\n\n> ECS Security GroupはApplication Port 8000への通信を許可するが、**SourceはALB Security Groupのみに限定する**。ECS Security Groupで**8000番ポートを0.0.0.0/0へ公開してはならない**。\n\n### 正しい設定\n- **ECS Security Group**：8000番ポートへの通信を許可するが、**送信元はALB Security Groupのみ**に限定する\n- 正常な通信経路は以下の通りです：\n  ```\n  Internet → ALB:80 → ECS:8000\n  ```\n\nインターネットからECSへ直接アクセスさせるのではなく、**必ずALBを経由させる**構成にする必要があります。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は「公開してはならない」と明確に述べており、ECSの8000番ポートへの通信元はALB Security Groupのみに限定すべきという期待回答の重要事項を満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張（8000番ポートを0.0.0.0/0へ公開してはならない、SourceはALB Security Groupのみに限定する、通信経路はInternet→ALB:80→ECS:8000）はすべてEvidence（alb-troubleshooting.pdf）に明記されており、一般知識による補完は見られない。"
+      }
+    }
+  },
+  {
+    "id": "iam-001",
+    "category": "direct",
+    "question": "Document RAG APIのアプリケーションからBedrockへアクセスする権限は、ECS Task RoleとTask Execution Roleのどちらに付与しますか？",
+    "expected_answer": "ECS Task Roleに付与する",
+    "generated_answer": "## 回答\n\n**ECS Task Role** に付与します。\n\n参考文書には以下のように明記されています：\n\n- **ECS Task Role** は「ECS上で動作するFastAPIアプリケーションがAWS APIを呼び出すために使用する」ものであり、**Amazon Bedrockへのアクセス権限**を持ちます。\n\n- **ECS Task Execution Role** はECRからのイメージ取得やCloudWatch Logsへのログ送信など、コンテナの起動・実行のために使用するものであり、**「アプリケーションからBedrockやS3へアクセスする権限をTask Execution Roleへ追加してはならない」** と明示されています。\n\nまた、Bedrock障害対応Runbookにも「アプリケーションからBedrockを呼び出す権限はECS Task Roleへ付与する。Task Execution RoleへBedrock呼び出し権限を追加して解決してはならない」と記載されています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はECS Task Roleに付与すると正確に述べており、期待回答と一致している"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の全ての主張はEvidenceに基づいている。ECS Task RoleがBedrockへのアクセス権限を持つこと、Task Execution Roleへ追加してはならないこと、RunbookでTask Roleへ付与するよう明記されていることは全てEvidenceに記載されている"
+      }
+    }
+  },
+  {
+    "id": "iam-002",
+    "category": "paraphrase",
+    "question": "CloudWatch LogsにAccessDeniedExceptionが出ています。エラーメッセージから何を確認すればよいですか？",
+    "expected_answer": "Principal、Action、Resourceを特定し、対象PrincipalのIAM PolicyでActionとResourceが許可されているか確認する",
+    "generated_answer": "## AccessDeniedExceptionの確認手順\n\nCloudWatch LogsにAccessDeniedExceptionが記録されている場合、エラーメッセージから以下の項目を確認してください。\n\n### 確認すべき情報\n\n1. **Principal** - APIを実行したIAMエンティティ\n2. **Action** - 拒否されたAWS APIアクション\n3. **Resource** - アクセス対象のリソースARN\n\n---\n\n### その後の対応手順\n\n上記を特定した後、以下の順で調査を進めます。\n\n1. **AWS APIを実行したPrincipal**（ECS Task Roleかどうか）を確認する\n2. 対象Principalに付与されている**IAM Policyを確認**する\n3. PolicyのActionおよびResourceが**対象APIを許可しているか**確認する\n\n---\n\n### ⚠️ 重要な注意事項\n\n- Document RAG APIの場合、アプリケーションからAWSサービス（BedrockやS3等）へアクセスする権限は、**ECS Task Execution RoleではなくECS Task Roleに付与**する必要があります\n- 権限不足が原因であっても、**Full Access Policyを付与して解決してはいけません**。必要なActionとResourceを特定し、**最小権限**となるよう権限を追加してください",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はPrincipal、Action、Resourceを特定し、対象PrincipalのIAM PolicyでActionとResourceが許可されているか確認するという期待回答の重要事項を満たしている。追加情報（ECS Task Roleに関する注意、最小権限の原則）が含まれているが、期待回答の核心部分は正確に反映されている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張はすべてEvidenceによって裏付けられている。Principal/Action/Resourceの特定はiam-troubleshooting.pdfに記載されており、ECS Task Roleに関する注意事項はecs-troubleshooting.pdfおよびiam-troubleshooting.pdfに記載されており、Full Access Policy禁止・最小権限の原則もiam-troubleshooting.pdfに記載されている。"
+      }
+    }
+  },
+  {
+    "id": "iam-003",
+    "category": "paraphrase",
+    "question": "S3のIAM PolicyでObject操作とBucket自体への操作ではResourceをどのように設定しますか？",
+    "expected_answer": "Object操作ではObject ARNを指定し、Bucket自体への操作ではBucket ARNを指定する",
+    "generated_answer": "## S3のIAM PolicyにおけるResourceの設定方法\n\n参考文書の情報に基づくと、以下のように設定します。\n\n### Object操作とBucket操作でResourceが異なる\n\n| 操作の種類 | 該当Action例 | 対象Resource |\n|---|---|---|\n| **Object操作** | `s3:GetObject`、`s3:PutObject`、`s3:DeleteObject` | **Object ARN**（例: `arn:aws:s3:::bucket-name/*`） |\n| **Bucket操作** | `s3:ListBucket` | **Bucket ARN**（例: `arn:aws:s3:::bucket-name`） |\n\n### 注意点\n\n- **Bucket ARNとObject ARNを誤って設定するとアクセスできない場合がある**ため、ActionとResourceの組み合わせを正しく設定することが重要です。\n- `AccessDenied`が発生した場合は、IAM PolicyのResourceが対象のObjectまたはBucketを含んでいるか確認してください。\n\n> 詳細はIAM AccessDenied障害対応Runbookを参照するよう文書に記載されています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はObject操作ではObject ARNを、Bucket操作ではBucket ARNを指定するという期待回答の重要事項を正しく満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張（Object操作にはObject ARN、Bucket操作にはBucket ARN、誤設定によるアクセス不可の注意点）はEvidenceに裏付けられている。Action例（s3:GetObject等）もEvidenceに記載されており、IAM AccessDenied障害対応Runbook参照の記述もEvidenceに存在する。"
+      }
+    }
+  },
+  {
+    "id": "iam-004",
+    "category": "multi_step",
+    "question": "/chatでS3 VectorsのAccessDeniedが発生し、ログにはs3vectors:GetVectorsが拒否されたと記録されています。どのように対応しますか？",
+    "expected_answer": "ECS Task RoleのS3 Vectors用IAM Policyを確認し、s3vectors:GetVectorsが対象Resourceに対して許可されているか確認する。必要なActionとResourceのみを最小権限で追加し、/chatを再実行して復旧確認する",
+    "generated_answer": "## 対応手順\n\n### 1. エラーの確認\nCloudWatch Logsに記録されている`AccessDeniedException`の内容を確認します。\n- **拒否されたAction**: `s3vectors:GetVectors`\n- **対象のResource ARN**: ログに記録されているS3 VectorsのBucketまたはIndex ARN\n\n---\n\n### 2. ECS Task RoleのIAM Policyを確認\n\n`/chat`エンドポイントでのAWSサービスへのアクセス権限は、**ECS Task Role**に付与する必要があります（ECS Task Execution Roleではありません）。\n\n以下の点を確認してください。\n\n| 確認項目 | 内容 |\n|---|---|\n| **Actionの許可** | `s3vectors:GetVectors` がTask RoleのIAM Policyに含まれているか |\n| **Resourceの範囲** | 対象のBucketまたはIndexが、IAM PolicyのResourceに含まれているか |\n\n---\n\n### 3. 関連Actionの確認\n\nRAG検索時は`s3vectors:GetVectors`だけでなく、**処理の中で利用する関連Actionもすべて許可されている必要**があります。\n\nS3 Vectorsで主に必要なActionは以下です。\n- `s3vectors:PutVectors`\n- `s3vectors:QueryVectors`\n- ✅ `s3vectors:GetVectors`（今回拒否されたAction）\n- `s3vectors:DeleteVectors`\n\n**ログに他のAction名が表示されていないかも合わせて確認し**、不足しているActionがあればTask RoleのIAM Policyに追加してください。\n\n---\n\n### 4. 注意点\nIAM PolicyのResourceには、対象の**BucketまたはIndex ARN**が正しく指定されているか確認してください。ARNの設定誤りによりアクセスできないケースがあります。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はECS Task RoleのIAM Policyを確認すること、s3vectors:GetVectorsが対象Resourceに許可されているか確認すること、関連Actionも含めて確認すること、/chatを再実行して復旧確認することを含んでいる。最小権限の原則については明示的な言及が薄いが、期待回答の重要事項は概ね満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張はすべてEvidenceに裏付けられている。ECS Task RoleへのIAM Policy確認、ActionとResource ARNの確認、s3vectors関連の4つのAction（PutVectors/QueryVectors/GetVectors/DeleteVectors）の列挙、関連Actionの確認、BucketまたはIndex ARNの確認などはすべてEvidenceに記載されている。"
+      }
+    }
+  },
+  {
+    "id": "s3-001",
+    "category": "direct",
+    "question": "Document RAG APIではAmazon S3にどのようなデータを保存していますか？",
+    "expected_answer": "アップロードされたPDFファイルとDocument Metadataを保存する。Document Metadataにはdocument_id、filename、chunk_countなどを記録する",
+    "generated_answer": "## Amazon S3に保存されるデータ\n\n参考文書によると、Document RAG APIではAmazon S3に以下のデータを保存しています。\n\n### 保存データの種類\n\n1. **PDFファイル**\n   - アップロードされたPDFファイルそのもの\n\n2. **Document Metadata**\n   - 以下の情報が含まれます：\n     - `document_id`\n     - `filename`\n     - `chunk_count`\n\n### 補足\n\nなお、**EmbeddingおよびチャンクのVector**については、Amazon S3ではなく **Amazon S3 Vectors** という別のストレージに保存されます。Amazon S3とAmazon S3 Vectorsは別のストレージとして扱われています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（PDFファイルとDocument Metadataの保存、document_id・filename・chunk_countの記録）をすべて満たしている。補足情報としてS3 Vectorsについても言及しているが、期待回答の内容に誤りや不足はない。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の全ての実質的な主張（PDFファイルの保存、Document Metadataの保存、document_id・filename・chunk_countの記録、EmbeddingとVectorはAmazon S3 Vectorsに保存されること、S3とS3 Vectorsが別ストレージであること）はEvidenceによって裏付けられており、一般知識による補完は見られない。"
+      }
+    }
+  },
+  {
+    "id": "s3-002",
+    "category": "paraphrase",
+    "question": "Document Metadataには文書が存在していますが、PDF本体を取得できません。何を確認すべきですか？",
+    "expected_answer": "S3上に対象PDF Objectが存在すること、document_idとObject Keyの対応、s3:GetObject権限、IAM PolicyのResourceを確認する。Metadataのみ存在してPDF Objectがない場合はデータ不整合として扱う",
+    "generated_answer": "## 確認すべき事項\n\n参考文書（chunk_id: 2）によると、以下の項目を確認してください。\n\n---\n\n### 1. **S3上の対象PDF Objectの存在確認**\n- 実際にAmazon S3上にPDF Objectが存在しているかを確認する。\n\n### 2. **document_idとObject Keyの対応確認**\n- `document_id` と S3上の Object Key が正しく紐づいているかを確認する。\n\n### 3. **s3:GetObject 権限の確認**\n- PDF取得に必要な `s3:GetObject` 権限が付与されているかを確認する。\n\n### 4. **IAM Policy の Resource 確認**\n- IAM Policy の Resource に対象の Object が含まれているかを確認する。\n\n---\n\n### ⚠️ 注意事項\n> **Document MetadataのみS3に存在し、PDF Objectが存在しない状態は「データ不整合」として扱われます。**\n\nこの場合、単なる権限エラーではなく、データの整合性の問題である可能性があるため、S3とS3 Vectorsの登録状態も合わせて確認することを推奨します。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（S3上の対象PDF Objectの存在確認、document_idとObject Keyの対応、s3:GetObject権限、IAM PolicyのResource確認、データ不整合として扱う点）をすべて満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張はすべてEvidenceに裏付けられている。ただし、末尾の「S3とS3 Vectorsの登録状態も合わせて確認することを推奨します」という記述は、Evidenceの登録処理途中での失敗に関する記述から推測できる内容であり、完全に根拠のない情報ではないが、やや補完的な要素を含む。ただし実質的な主張の中心はEvidenceで裏付けられており、全体としてfalseと判断するほどの逸脱はない。"
+      }
+    }
+  },
+  {
+    "id": "s3-003",
+    "category": "paraphrase",
+    "question": "文書を削除したはずなのに、その文書の内容が全文書横断検索の結果に表示されます。何が起きている可能性がありますか？",
+    "expected_answer": "S3のDocument Metadataは削除されているが、S3 Vectors上に対象文書のVectorが残った孤児Vectorが発生している可能性がある",
+    "generated_answer": "## 考えられる原因：「孤児Vector」の発生\n\n参考文書によると、**S3のDocument Metadataのみ削除され、S3 Vectors上にVectorが残っている状態（「孤児Vector」）** が発生している可能性があります。\n\n---\n\n### 詳しい説明\n\n文書を完全に削除するには、以下の**3つのデータをすべて削除**する必要があります：\n\n1. Amazon S3上のPDF\n2. Document Metadata\n3. Amazon S3 Vectors上の対象文書のVector\n\nこのうち **Document Metadataのみ削除され、S3 Vectors上のVectorが残った状態**が「孤児Vector」と呼ばれます。\n\n> 孤児Vectorは**全文書横断検索時に検索対象となり、削除済み文書が回答根拠として利用される可能性がある**と明記されています。\n\n---\n\n### 確認・対応方法\n\n- `document_id` に紐づくデータが **各ストレージ（S3・S3 Vectors）に残っていないか**確認する\n- S3の `document_id`、`chunk_count`、Vector KeyおよびVector Metadata内の `document_id` などを比較し、**データ整合性を確認**する\n- 修正後は**全文書横断検索も実行**し、削除済み文書が検索結果に含まれないことを確認する\n\n---\n\n解決できない場合（例：削除対象Vectorを安全に特定できない、不整合原因不明など）は、**クラウド基盤担当者へエスカレーション**することが推奨されています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項である「S3のDocument Metadataは削除されているが、S3 Vectors上に対象文書のVectorが残った孤児Vectorが発生している可能性がある」を正確に含んでいる。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主要な主張（孤児Vectorの定義、全文書横断検索での影響、確認方法、エスカレーション推奨）はすべてEvidenceに明記されており、一般知識による補完は見られない。"
+      }
+    }
+  },
+  {
+    "id": "s3-004",
+    "category": "multi_step",
+    "question": "S3のDocument Metadataでは2文書だけ登録されていますが、S3 Vectorsにはそれ以上の文書のVectorが存在しています。どのように調査・復旧しますか？",
+    "expected_answer": "S3のdocument_idとchunk_countをS3 VectorsのVector Key、document_id、source、chunk_indexと比較し、現在有効なdocument_idに属さない孤児Vectorを特定する。有効なVectorを残して不要Vectorのみ削除し、削除後に各文書のVector数とchunk_countが一致することを再確認する",
+    "generated_answer": "## 調査・復旧手順\n\n### 状況の整理\nこれは **S3とS3 Vectorsのデータ不整合**、および**孤児Vector**が発生している状態です。\n\n---\n\n### 1. 不整合の調査\n\n以下の項目を比較・確認します：\n\n| 確認項目 | 内容 |\n|---|---|\n| S3の`document_id` | Document Metadata上に存在する文書IDを一覧化 |\n| 各Document Metadataの`chunk_count` | 文書ごとのチャンク数を確認 |\n| S3 VectorsのVector Key | 存在するVectorのキーを一覧化 |\n| Vector Metadata内の情報 | `document_id`・`source`・`chunk_index`を確認 |\n\n> **判断基準：** 各文書のVector数と`chunk_count`が一致しているか確認し、Document Metadataに存在しない`document_id`に紐づくVectorが**孤児Vector**となります。\n\n---\n\n### 2. 孤児Vectorのリスク\n\n孤児Vectorを放置すると、**全文書横断検索時に削除済み文書が検索対象**となり、削除済み文書が回答根拠として利用される可能性があります。\n\n---\n\n### 3. 復旧手順\n\n1. **孤児Vectorの特定**\n   - Document Metadata上に存在しない`document_id`に紐づくVectorを特定する\n2. **孤児Vectorの削除**\n   - 対象のVectorをS3 Vectorsから削除する\n3. **削除後の残存データ確認**\n   - `document_id`に紐づくデータが各ストレージに残っていないことを確認する\n\n---\n\n### 4. 復旧確認\n\n- **単一文書検索**だけでなく、**全文書横断検索**も実行する\n- 削除済み文書が検索結果に含まれないことを確認する\n- S3とS3 Vectorsの`document_id`および件数の整合を確認する\n\n---\n\n### 5. エスカレーション基準\n\n以下の場合は**クラウド基盤担当者へエスカレーション**します：\n- 削除対象Vectorを安全に特定できない\n- 不整合の原因が不明\n- 複数文書で継続的な不整合が発生する",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項をすべて満たしている。S3のdocument_idとchunk_countをS3 VectorsのVector Key、document_id、source、chunk_indexと比較すること、有効なdocument_idに属さない孤児Vectorを特定すること、不要Vectorのみ削除すること、削除後に各文書のVector数とchunk_countが一致することを再確認することが含まれている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の主な主張はすべてEvidenceに裏付けられている。孤児Vectorの定義と検索への影響、S3とS3 Vectorsの比較項目（document_id、chunk_count、Vector Key、Vector Metadata内のdocument_id・source・chunk_index）、復旧確認手順（単一文書検索と全文書横断検索）、エスカレーション基準はすべてEvidenceに記載されている。Evidenceに存在しない一般知識で補完している部分は見当たらない。"
+      }
+    }
+  },
+  {
+    "id": "bedrock-001",
+    "category": "direct",
+    "question": "Document RAG APIではEmbedding生成と回答生成にそれぞれどのモデルを使用していますか？",
+    "expected_answer": "Embedding生成にはAmazon Titan Text Embeddings V2、回答生成にはClaude Sonnet 4.6を使用する",
+    "generated_answer": "## Document RAG APIで使用するモデル\n\n参考文書によると、以下のモデルを使用しています。\n\n### Embedding生成\n- **Amazon Titan Text Embeddings V2**\n  - テキストをVectorへ変換し、S3 Vectorsへの保存および類似検索に利用\n  - Bedrock Runtimeの **InvokeModel API** を使用\n\n### 回答生成\n- **Claude Sonnet 4.6**\n  - S3 Vectorsから取得した参考文書とユーザーの質問を入力としてRAG回答を生成\n  - Bedrock Runtimeの **Converse API** を使用\n\nなお、両者は異なるモデルおよび処理であるため、Bedrock障害時はどちらで失敗しているかを切り分けることが推奨されています。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答はEmbedding生成にAmazon Titan Text Embeddings V2、回答生成にClaude Sonnet 4.6を使用していると正確に述べており、期待回答の重要事項を満たしている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の全ての主張（Embedding生成にAmazon Titan Text Embeddings V2とInvokeModel API、回答生成にClaude Sonnet 4.6とConverse API、障害時の切り分け推奨）はEvidenceによって裏付けられている。"
+      }
+    }
+  },
+  {
+    "id": "bedrock-002",
+    "category": "paraphrase",
+    "question": "POST /chatでEmbeddingServiceErrorが発生しました。Bedrockについて何を確認すべきですか？",
+    "expected_answer": "Titan Text Embeddings V2のModel ID、AWS Region、ECS Task Roleのbedrock:InvokeModel権限、対象Foundation Modelへアクセス可能であることを確認する",
+    "generated_answer": "## Embedding ServiceErrorが発生した場合の確認事項\n\n参考文書によると、`EmbeddingServiceError`が発生した場合、**CloudWatch Logs**でエラーの詳細を確認した上で、以下の点をチェックしてください。\n\n---\n\n### 確認すべき項目\n\n| 確認項目 | 内容 |\n|----------|------|\n| **Embedding Model ID** | 正しいModel IDが設定されているか（Amazon Titan Text Embeddings V2） |\n| **AWS Region** | 正しいリージョンが設定されているか |\n| **IAM権限** | ECS Task Roleに `bedrock:InvokeModel` が許可されているか |\n| **Foundation Modelへのアクセス** | 対象のFoundation Modelへアクセス可能な状態か |\n\n---\n\n### 補足\n\n- Document RAG APIでは、Embedding ModelとしてAmazon **Titan Text Embeddings V2** を使用しています\n- Embedding生成に失敗すると**質問Vectorが作成できず**、後続のS3 Vectorsによる検索処理に進めなくなります\n- Bedrockの問題か他の処理の問題かを切り分けるため、CloudWatch Logsで`EmbeddingServiceError`とその原因となるBedrockエラーを詳細に確認することが重要です",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（Titan Text Embeddings V2のModel ID、AWS Region、ECS Task Roleのbedrock:InvokeModel権限、対象Foundation Modelへのアクセス確認）をすべて満たしている"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の実質的な主張はすべてEvidenceに裏付けられている。Model ID、Region、IAM権限、Foundation Modelアクセス、CloudWatch Logsの確認、Titan Text Embeddings V2の使用、EmbeddingServiceError時の影響などはすべてEvidenceに明示されている"
+      }
+    }
+  },
+  {
+    "id": "bedrock-003",
+    "category": "paraphrase",
+    "question": "S3 Vectorsによる検索は成功していますが、その後の回答生成で失敗しています。どこを調査しますか？",
+    "expected_answer": "Claudeによる回答生成側を調査し、BedrockServiceError、ClaudeのModel IDまたはInference Profile ID、AWS Region、bedrock:InvokeModel権限、Inference Profileの状態を確認する",
+    "generated_answer": "## 調査すべき箇所\n\nS3 Vectorsによる検索が成功しているにもかかわらず回答生成に失敗している場合、**Claude呼び出し側**に調査対象を絞ることができます。\n\n### 具体的な調査手順\n\n**1. CloudWatch Logsの確認**\n- `BedrockServiceError` のログを確認\n- Bedrock Runtimeから返されたエラー内容を確認\n\n**2. 以下の項目をチェック**\n\n| 確認項目 | 内容 |\n|----------|------|\n| Model ID | ClaudeのModel IDが正しいか |\n| Inference Profile ID | 正しく設定されているか |\n| AWS Region | 正しいRegionが指定されているか |\n| IAM権限 | `bedrock:InvokeModel` 権限が付与されているか |\n| Inference Profileの状態 | 正常に稼働しているか |\n| Foundation Model | 対象モデルが利用可能な状態か |\n\n### ポイント\n\nS3 Vectorsの検索が成功していることから、**EmbeddingとS3 Vectors検索の処理は正常**であることが確認できているため、調査範囲を**回答生成側（Claude呼び出し）に絞って**効率的に調査を進めることができます。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項（BedrockServiceError、ClaudeのModel IDまたはInference Profile ID、AWS Region、bedrock:InvokeModel権限、Inference Profileの状態）をすべて網羅しており、回答生成側（Claude呼び出し）を調査するという方向性も一致している。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の実質的な主張（Claude呼び出し側の調査、BedrockServiceError確認、Model ID・Inference Profile ID・AWS Region・bedrock:InvokeModel権限・Inference Profileの状態のチェック、S3 Vectors成功による調査範囲の絞り込み）はすべてEvidenceに記載されている内容と一致しており、Evidenceに存在しない情報を一般知識で補完している箇所は見当たらない。"
+      }
+    }
+  },
+  {
+    "id": "bedrock-004",
+    "category": "multi_step",
+    "question": "POST /chatが503を返しています。CloudWatch LogsにはVectorStoreServiceErrorが記録されています。Claudeの障害として調査すべきですか？",
+    "expected_answer": "Claudeの障害として扱わない。VectorStoreServiceErrorはS3 Vectors検索処理の失敗を示しており、Claudeによる回答生成より前の段階で失敗しているため、S3 Vectors側を調査する",
+    "generated_answer": "## 回答\n\n**いいえ、Claudeの障害として調査すべきではありません。**\n\n参考文書によると、`VectorStoreServiceError`の場合は以下のように明記されています：\n\n> **S3 Vectorsの検索処理を調査する。Bedrockの回答生成より前の処理で失敗しているため、Claude側の障害として扱わない。**\n\n### 対応方針\n\n`VectorStoreServiceError`は、ClaudeによるBedrockでの回答生成が行われる**前の段階**（S3 Vectorsの検索処理）で失敗しているため、調査対象は以下となります：\n\n- **S3 Vectorsの検索処理**を重点的に調査する\n\n### 補足注意事項\n\nまた、文書では以下の点も強調されています：\n\n> **エラー種別を確認せず、503というHTTPステータスだけからBedrock障害と判断してはならない。**\n\n`503`というステータスコードだけで判断せず、CloudWatch Logsのエラー種別（今回は`VectorStoreServiceError`）を確認した上で、適切な調査対象を絞ることが重要です。",
+    "judgment": {
+      "correctness": {
+        "passed": true,
+        "reason": "生成回答は期待回答の重要事項を満たしている。Claudeの障害として扱わないこと、VectorStoreServiceErrorはS3 Vectors検索処理の失敗を示すこと、Claudeによる回答生成より前の段階で失敗していること、S3 Vectors側を調査すべきことが正確に述べられている。"
+      },
+      "faithfulness": {
+        "passed": true,
+        "reason": "生成回答の全ての主張はEvidenceによって裏付けられている。VectorStoreServiceErrorの場合にS3 Vectorsの検索処理を調査すること、Bedrockの回答生成より前の処理で失敗しているためClaude側の障害として扱わないこと、503というHTTPステータスだけからBedrock障害と判断してはならないことは全てEvidenceに明記されている。"
+      }
+    }
+  }
+]
