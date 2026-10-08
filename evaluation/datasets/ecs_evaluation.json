@@ -1,16 +1,16 @@
 [
   {
-    "id": "ecs-001",
-    "question": "Document RAG APIのApplication Portは何番ですか？",
-    "category": "direct",
-    "expected_answer": "8000",
-    "expected_section": "2. システム基本情報",
-    "expected_sources": [
-      "ecs-troubleshooting.pdf",
-      "alb-troubleshooting.pdf"
-    ],
-    "answerable": true
-  },
+  "id": "ecs-001",
+  "question": "Document RAG APIのApplication Portは何番ですか？",
+  "category": "direct",
+  "expected_answer": "8000",
+  "expected_section": "2. システム基本情報",
+  "expected_sources": [
+    "ecs-troubleshooting.pdf",
+    "alb-troubleshooting.pdf"
+  ],
+  "answerable": true
+},
   {
     "id": "ecs-002",
     "question": "障害調査を開始してから何分以内に原因を特定できなければエスカレーションしますか？",
