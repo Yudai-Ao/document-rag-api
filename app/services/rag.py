@@ -1,5 +1,6 @@
 from app.services.bedrock import generate_answer
 from app.services.vector_store import search_vectors
+from app.services.evidence import has_sufficient_evidence
 from app.config import settings
 
 
@@ -40,7 +41,20 @@ def generate_rag_answer(
     if not contexts:
         return {
             "answer": "",
-            "contexts": []
+            "contexts": [],
+            "abstained": True
+        }
+
+    sufficient = has_sufficient_evidence(
+        question=question,
+        contexts=contexts
+    )
+
+    if not sufficient:
+        return {
+            "answer": "文書からは分かりません",
+            "contexts": contexts,
+            "abstained": True
         }
 
     prompt = build_prompt(
@@ -52,5 +66,6 @@ def generate_rag_answer(
 
     return {
         "answer": answer,
-        "contexts": contexts
+        "contexts": contexts,
+        "abstained": False
     }

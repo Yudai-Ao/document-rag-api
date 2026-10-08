@@ -16,6 +16,7 @@ def test_build_evaluate_result_accepts_multiple_expected_sourcs():
 
     rag_result = {
         "answer": "Application Portは8000番です。",
+        "abstained": False,
         "contexts": [
             {
                 "source": "alb-troubleshooting.pdf",
@@ -38,3 +39,4 @@ def test_build_evaluate_result_accepts_multiple_expected_sourcs():
     assert result["retrieval"]["expected_source_found"] is True
     assert result["retrieval"]["expected_source_rank"] == 1
     assert result["retrieval"]["top1_distance"] == 0.4
+    assert result["abstained"] is False
