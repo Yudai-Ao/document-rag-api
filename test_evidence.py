@@ -1,23 +1,41 @@
+
 from app.services.vector_store import search_vectors
 
 
-def main():
-    question = (
+QUESTIONS = {
+    "ecs-002": (
+        "障害調査を開始してから何分以内に"
+        "原因を特定できなければエスカレーションしますか？"
+    ),
+    "ecs-003": (
         "Document RAG APIのECS Taskは"
         "どのCPUアーキテクチャを使用しますか？"
     )
+}
 
-    contexts = search_vectors(
-        question=question,
-        top_k=2,
-        document_id=None
-    )
 
-    for rank, context in enumerate(contexts, start=1):
-        print(f"\nRank: {rank}")
-        print(f"Source: {context['source']}")
-        print(f"Distance: {context['distance']:.3f}")
-        print(f"Text:\n{context['text']}")
+def main():
+
+    for case_id, question in QUESTIONS.items():
+
+        contexts = search_vectors(
+            question=question,
+            top_k=10,
+            document_id=None
+        )
+
+        print(f"\n=== {case_id} ===")
+
+        for rank, context in enumerate(
+            contexts,
+            start=1
+        ):
+            print(
+                f"\nRank: {rank}"
+                f"\nSource: {context['source']}"
+                f"\nDistance: {context['distance']:.3f}"
+                f"\nText:\n{context['text']}"
+            )
 
 
 if __name__ == "__main__":
